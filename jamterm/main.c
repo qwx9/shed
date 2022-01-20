@@ -81,6 +81,13 @@ threadmain(int argc, char *argv[])
 				continue;
 			}
 			nwhich = flwhich(mousep->xy);
+			if(nwhich && nwhich!=which){
+				Point p = mousep->xy;
+				int b = mousep->buttons;
+				current(nwhich);
+				mousep->xy = p;
+				mousep->buttons = b;
+			}
 			scr = which && (ptinrect(mousep->xy, which->scroll) ||
 				mousep->buttons&(8|16));
 			if(mousep->buttons)

@@ -55,6 +55,7 @@ threadmain(int argc, char *argv[])
 	cmd.tag = Untagged;
 	outTs(Tversion, VERSION);
 	startnewfile(Tstartcmdfile, &cmd);
+	fmtinstall('P', Pfmt);
 
 	got = 0;
 	chord = 0;
@@ -66,7 +67,7 @@ threadmain(int argc, char *argv[])
 		if(got&(1<<RPlumb)){
 			for(i=0; cmd.l[i].textfn==0; i++)
 				;
-			current(&cmd.l[i]);
+			current(&cmd.l[i], 1);
 			flsetselect(which, cmd.rasp.nrunes, cmd.rasp.nrunes);
 			type(which, RPlumb);
 		}
@@ -84,7 +85,7 @@ threadmain(int argc, char *argv[])
 			if(nwhich && nwhich!=which){
 				Point p = mousep->xy;
 				int b = mousep->buttons;
-				current(nwhich);
+				current(nwhich, 0);
 				mousep->xy = p;
 				mousep->buttons = b;
 			}
@@ -112,7 +113,7 @@ threadmain(int argc, char *argv[])
 				if(scr)
 					scroll(which, (mousep->buttons&8) ? 4 : 1);
 				else if(nwhich && nwhich!=which)
-					current(nwhich);
+					current(nwhich, 0);
 				else{
 					t=(Text *)which->user1;
 					nclick = flselect(which, &p);
@@ -156,7 +157,18 @@ resize(void)
 }
 
 void
-current(Flayer *nw)
+warpmouse(Flayer *l)
+{
+	Point p;
+
+	if(l == nil || ptinrect(mousectl->xy, l->entire))
+		return;
+	p = addpt(l->entire.min, divpt(subpt(l->entire.max, l->entire.min), 2));
+	moveto(mousectl, p);
+}
+
+void
+current(Flayer *nw, int warp)
 {
 	Text *t;
 
@@ -171,6 +183,8 @@ current(Flayer *nw)
 		t->front = nw-&t->l[0];
 		if(t != &cmd)
 			work = nw;
+		if(warp)
+			warpmouse(nw);
 	}
 	which = nw;
 }
@@ -187,7 +201,7 @@ closeup(Flayer *l)
 	flclose(l);
 	if(l == which){
 		which = 0;
-		current(flwhich(Pt(0, 0)));
+		current(flwhich(Pt(0, 0)), 0);
 	}
 	if(l == work)
 		work = 0;
@@ -236,7 +250,7 @@ duplicate(Flayer *l, Rectangle r, Font *f, int close)
 				which = 0;
 		}else
 			t->nwin++;
-		current(nl);
+		current(nl, 0);
 		hcheck(t->tag);
 	}
 	setcursor(mousectl, cursor);
@@ -702,7 +716,7 @@ type(Flayer *l, int res)	/* what a bloody mess this is */
 		t = &cmd;
 		for(l=t->l; l->textfn==0; l++)
 			;
-		current(l);
+		current(l, 1);
 		flushtyping(0);
 		a = t->rasp.nrunes;
 		flsetselect(l, a, a);
@@ -712,7 +726,7 @@ type(Flayer *l, int res)	/* what a bloody mess this is */
  		if(work == nil)
  			return;
  		if(which != work){
- 			current(work);
+ 			current(work, 1);
  			return;
  		}
  		t = (Text*)work->user1;
@@ -722,7 +736,7 @@ type(Flayer *l, int res)	/* what a bloody mess this is */
  				l = &t->l[i];
  				break;
  			}
- 		current(l);
+ 		current(l, 1);
 	}else{
 		if(c==Kesc && typeesc>=0){
 			l->p0 = typeesc;

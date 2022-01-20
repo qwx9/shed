@@ -167,7 +167,7 @@ menu3hit(void)
 					if(++i==NL)
 						i = 0;
 				while(i!=t->front && t->l[i].textfn==0);
-			current(&t->l[i]);
+			current(&t->l[i], 0);
 		}else if(!hostlock)
 			sweeptext(0, tag[m-NMENU3]);
 		break;
@@ -189,7 +189,7 @@ sweeptext(int new, int tag)
 		r = defaultrect();
 	if(Dx(r) < 2*FLMARGIN || Dy(r) < 2*FLMARGIN)
 		r = cmd.l[cmd.front].entire;
-	current((Flayer *)0);
+	current((Flayer *)0, 0);
 	flnew(&t->l[0], gettext, 0, (char *)t);
 	flinit(&t->l[0], r, font, maincols);	/*bnl*/
 	t->nwin = 1;

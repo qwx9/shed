@@ -29,18 +29,18 @@ flstart(Rectangle r)
 	lDrect = r;
 
 	/* Main text is yellowish */
-	maincols[BACK] = allocimagemix(display, DPaleyellow, DWhite);
-	maincols[HIGH] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, DDarkyellow);
-	maincols[BORD] = allocimage(display, Rect(0,0,2,2), screen->chan, 1, DYellowgreen);
-	maincols[TEXT] = display->black;
-	maincols[HTEXT] = display->black;
+	maincols[BACK] = display->black;
+	maincols[HIGH] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x440000FF);
+	maincols[BORD] = allocimage(display, Rect(0,0,2,2), screen->chan, 1, 0x222222FF);
+	maincols[TEXT] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x884400FF);
+	maincols[HTEXT] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x884400FF);
 
 	/* Command text is blueish */
-	cmdcols[BACK] = allocimagemix(display, DPalebluegreen, DWhite);
-	cmdcols[HIGH] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, DPalegreygreen);
-	cmdcols[BORD] = allocimage(display, Rect(0,0,2,2), screen->chan, 1, DPurpleblue);
-	cmdcols[TEXT] = display->black;
-	cmdcols[HTEXT] = display->black;
+	cmdcols[BACK] = display->black;
+	cmdcols[HIGH] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x111111FF);
+	cmdcols[BORD] = allocimage(display, Rect(0,0,2,2), screen->chan, 1, 0x440000FF);
+	cmdcols[TEXT] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x770000FF);
+	cmdcols[HTEXT] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x770000FF);
 }
 
 void
@@ -89,12 +89,12 @@ void
 flclose(Flayer *l)
 {
 	if(l->visible == All)
-		draw(screen, l->entire, display->white, nil, ZP);
+		draw(screen, l->entire, display->black, nil, ZP);
 	else if(l->visible == Some){
 		if(l->f.b == 0)
 			l->f.b = allocimage(display, l->entire, screen->chan, 0, DNofill);
 		if(l->f.b){
-			draw(l->f.b, l->entire, display->white, nil, ZP);
+			draw(l->f.b, l->entire, display->black, nil, ZP);
 			flrefresh(l, l->entire, 0);
 		}
 	}
@@ -362,7 +362,7 @@ flresize(Rectangle dr)
 	if(0 && Dx(dr)==Dx(olDrect) && Dy(dr)==Dy(olDrect))
 		move = 1;
 	else
-		draw(screen, lDrect, display->white, nil, ZP);
+		draw(screen, lDrect, display->black, nil, ZP);
 	for(i=0; i<nllist; i++){
 		l = llist[i];
 		l->lastsr = ZR;

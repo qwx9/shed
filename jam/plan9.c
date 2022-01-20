@@ -1,6 +1,6 @@
 #include "sam.h"
 
-Rune	samname[] = L"~~sam~~";
+Rune	samname[] = L"~~jam~~";
 
 Rune *left[]= {
 	L"{[(<«",
@@ -15,15 +15,15 @@ Rune *right[]= {
 	0
 };
 
-char	RSAM[] = "sam";
-char	SAMTERM[] = "/bin/aux/samterm";
+char	RSAM[] = "jam";
+char	SAMTERM[] = "/bin/aux/jamterm";
 char	HOME[] = "home";
 char	TMPDIR[] = "/tmp";
 char	SH[] = "rc";
 char	SHPATH[] = "/bin/rc";
 char	RX[] = "rx";
 char	RXPATH[] = "/bin/rx";
-char	SAMSAVECMD[] = "/bin/rc\n/sys/lib/samsave";
+char	SAMSAVECMD[] = "/bin/rc\n/sys/lib/jamsave";
 
 void
 dprint(char *z, ...)
@@ -128,7 +128,7 @@ waitfor(int pid)
 void
 samerr(char *buf)
 {
-	sprint(buf, "%s/sam.err", TMPDIR);
+	sprint(buf, "%s/jam.err", TMPDIR);
 }
 
 void*

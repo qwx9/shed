@@ -326,7 +326,7 @@ genmenu3(int n)
 	if(n == 0)	/* unless we've been fooled, this is cmd */
 		return (char *)&name[n][1];
 	if(mw == -1){
-		mw = 7;	/* strlen("~~sam~~"); */
+		mw = 7;	/* strlen("~~jam~~"); */
 		for(i=1; i<nname; i++){
 			w = utflen((char*)name[i]+1)+4;	/* include "'+. " */
 			if(w > mw)

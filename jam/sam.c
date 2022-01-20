@@ -40,7 +40,7 @@ void main(int argc, char *argv[])
 	char *termargs[10], **ap;
 	
 	ap = termargs;
-	*ap++ = "samterm";
+	*ap++ = "jamterm";
 	ARGBEGIN{
 	case 'd':
 		dflag++;
@@ -58,9 +58,9 @@ void main(int argc, char *argv[])
 		rsamname = EARGF(usage());
 		break;
 	default:
-		dprint("sam: unknown flag %c\n", ARGC());
+		dprint("jam: unknown flag %c\n", ARGC());
 		usage();
-	/* options for samterm */
+	/* options for jamterm */
 	case 'a':
 		*ap++ = "-a";
 		if(ap >= termargs+nelem(termargs))
@@ -114,7 +114,7 @@ void main(int argc, char *argv[])
 void
 usage(void)
 {
-	dprint("usage: sam [-d] [-t samterm] [-s sam name] -r machine\n");
+	dprint("usage: jam [-d] [-t jamterm] [-s jam name] -r machine\n");
 	exits("usage");
 }
 
@@ -134,7 +134,7 @@ rescue(void)
 		if(f==cmd || f->nc==0 || !fileisdirty(f))
 			continue;
 		if(io == -1){
-			sprint(buf, "%s/sam.save", home);
+			sprint(buf, "%s/jam.save", home);
 			io = create(buf, 1, 0777);
 			if(io<0)
 				return;
@@ -161,9 +161,9 @@ panic(char *s)
 	if(!panicking++ && !setjmp(mainloop)){
 		wasd = downloaded;
 		downloaded = 0;
-		dprint("sam: panic: %s: %r\n", s);
+		dprint("jam: panic: %s: %r\n", s);
 		if(wasd)
-			fprint(2, "sam: panic: %s: %r\n", s);
+			fprint(2, "jam: panic: %s: %r\n", s);
 		rescue();
 		abort();
 	}

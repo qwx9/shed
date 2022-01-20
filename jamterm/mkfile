@@ -1,6 +1,6 @@
 </$objtype/mkfile
 
-TARG=samterm
+TARG=jamterm
 OFILES=main.$O\
 	icons.$O\
 	menu.$O\
@@ -27,9 +27,9 @@ UPDATE=\
 
 </sys/src/cmd/mkone
 
-CFLAGS=-I../sam $CFLAGS
+CFLAGS=-I../jam $CFLAGS
 
-mesg.$O:	../sam/mesg.h
+mesg.$O:	../jam/mesg.h
 
 syms:V:
 	$CC -a $CFLAGS main.c		 > syms

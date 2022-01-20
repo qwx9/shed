@@ -751,7 +751,7 @@ panic(char *s)
 void
 panic1(Display*, char *s)
 {
-	fprint(2, "samterm:panic: ");
+	fprint(2, "jamterm: panic: ");
 	perror(s);
 	abort();
 }

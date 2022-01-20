@@ -182,7 +182,7 @@ checkerrs(void)
 				*p = 0;
 				dprint("%s", buf);
 				if(p-buf < l-1)
-					dprint("(sam: more in %s)\n", errfile);
+					dprint("(jam: more in %s)\n", errfile);
 			}
 			close(f);
 		}

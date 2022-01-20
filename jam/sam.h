@@ -160,7 +160,7 @@ struct File
 	long		seq;		/* if seq==0, File acts like Buffer */
 	long		cleanseq;	/* f->seq at last read/write of file */
 	int		mod;		/* file appears modified in menu */
-	char		rescuing;	/* sam exiting; this file unusable */
+	char		rescuing;	/* jam exiting; this file unusable */
 
 //	Text		*curtext;	/* most recently used associated text */
 //	Text		**text;		/* list of associated texts */

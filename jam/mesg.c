@@ -90,7 +90,7 @@ journal(int out, char *s)
 	static int fd = -1;
 
 	if(fd < 0)
-		fd = create("/tmp/sam.out", 1, 0666L);
+		fd = create("/tmp/jam.out", 1, 0666L);
 	if(fd >= 0)
 		fprint(fd, "%s%s\n", out? "out: " : "in:  ", s);
 }
@@ -528,7 +528,7 @@ inmesg(Tmesg type)
 		p0 = inlong();
 		p1 = inlong();
 		pm = emalloc(sizeof(Plumbmsg));
-		pm->src = strdup("sam");
+		pm->src = strdup("jam");
 		pm->dst = 0;
 		/* construct current directory */
 		c = Strtoc(&f->name);

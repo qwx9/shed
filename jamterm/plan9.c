@@ -18,7 +18,7 @@ static char exname[64];
 void
 usage(void)
 {
-	fprint(2, "usage: samterm [-ai]\n");
+	fprint(2, "usage: jamterm [-ai]\n");
 	threadexitsall("usage");
 }
 
@@ -38,8 +38,8 @@ getscreen(int argc, char **argv)
 		usage();
 	}ARGEND
 
-	if(initdraw(panic1, nil, "sam") < 0){
-		fprint(2, "samterm: initdraw: %r\n");
+	if(initdraw(panic1, nil, "jam") < 0){
+		fprint(2, "jamterm: initdraw: %r\n");
 		threadexitsall("init");
 	}
 	t = getenv("tabstop");
@@ -109,7 +109,7 @@ snarfswap(char *fromsam, int nc, char **tosam)
 void
 dumperrmsg(int count, int type, int count0, int c)
 {
-	fprint(2, "samterm: host mesg: count %d %ux %ux %ux %s...ignored\n",
+	fprint(2, "jamterm: host mesg: count %d %ux %ux %ux %s...ignored\n",
 		count, type, count0, c, rcvstring());
 }
 
@@ -138,7 +138,7 @@ extproc(void *argv)
 		i = 1-i;	/* toggle */
 		n = read(*fdp, plumbbuf[i].data, sizeof plumbbuf[i].data);
 		if(n <= 0){
-			fprint(2, "samterm: extern read error: %r\n");
+			fprint(2, "jamterm: extern read error: %r\n");
 			threadexits("extern");	/* not a fatal error */
 		}
 		plumbbuf[i].n = n;
@@ -207,7 +207,7 @@ plumbproc(void *argv)
 		i = 1-i;	/* toggle */
 		n = read(*fdp, plumbbuf[i].data, READBUFSIZE);
 		if(n <= 0){
-			fprint(2, "samterm: plumb read error: %r\n");
+			fprint(2, "jamterm: plumb read error: %r\n");
 			threadexits("plumb");	/* not a fatal error */
 		}
 		plumbbuf[i].n = n;
@@ -257,7 +257,7 @@ hostproc(void *arg)
 					threadexits(nil);
 				werrstr("unexpected eof");
 			}
-			fprint(2, "samterm: host read error: %r\n");
+			fprint(2, "jamterm: host read error: %r\n");
 			threadexitsall("host");
 		}
 		hostbuf[i].n = n;

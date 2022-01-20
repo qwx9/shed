@@ -8,7 +8,7 @@ tempdisk(void)
 	char buf[128];
 	int i, fd;
 
-	snprint(buf, sizeof buf, "/tmp/X%d.%.4ssam", getpid(), getuser());
+	snprint(buf, sizeof buf, "/tmp/X%d.%.4sjam", getpid(), getuser());
 	for(i='A'; i<='Z'; i++){
 		buf[5] = i;
 		if(access(buf, AEXIST) == 0)
@@ -28,7 +28,7 @@ diskinit()
 	d = emalloc(sizeof(Disk));
 	d->fd = tempdisk();
 	if(d->fd < 0){
-		fprint(2, "sam: can't create temp file: %r\n");
+		fprint(2, "jam: can't create temp file: %r\n");
 		exits("diskinit");
 	}
 	return d;

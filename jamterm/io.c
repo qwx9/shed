@@ -33,13 +33,13 @@ initio(void)
 	threadsetname("main");
 	mousectl = initmouse(nil, display->image);
 	if(mousectl == nil){
-		fprint(2, "samterm: mouse init failed: %r\n");
+		fprint(2, "jamterm: mouse init failed: %r\n");
 		threadexitsall("mouse");
 	}
 	mousep = mousectl;
 	keyboardctl = initkeyboard(nil);
 	if(keyboardctl == nil){
-		fprint(2, "samterm: keyboard init failed: %r\n");
+		fprint(2, "jamterm: keyboard init failed: %r\n");
 		threadexitsall("kbd");
 	}
 	hoststart();
@@ -236,7 +236,7 @@ ekbd(void)
 		return c;
 	}
 	if(recv(keyboardctl->c, &r) < 0){
-		fprint(2, "samterm: keybard recv error: %r\n");
+		fprint(2, "jamterm: keybard recv error: %r\n");
 		panic("kbd");
 	}
 	return r;

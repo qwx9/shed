@@ -189,7 +189,7 @@ bootterm(char *machine, char **argv)
 		dup(remotefd1, 1);
 		close(remotefd0);
 		close(remotefd1);
-		argv[0] = "samterm";
+		argv[0] = "jamterm";
 		exec(samterm, argv);
 		fprint(2, "can't exec: ");
 		perror(samterm);
@@ -205,13 +205,13 @@ bootterm(char *machine, char **argv)
 		close(ph2t[1]);
 		close(pt2h[0]);
 		close(pt2h[1]);
-		argv[0] = "samterm";
+		argv[0] = "jamterm";
 		exec(samterm, argv);
 		fprint(2, "can't exec: ");
 		perror(samterm);
 		_exits("damn");
 	case -1:
-		panic("can't fork samterm");
+		panic("can't fork jamterm");
 	}
 	dup(pt2h[0], 0);
 	dup(ph2t[1], 1);

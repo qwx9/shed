@@ -1,7 +1,7 @@
 #include "sam.h"
 /*
  * GROWDATASIZE must be big enough that all errors go out as Hgrowdata's,
- * so they will be scrolled into visibility in the ~~sam~~ window (yuck!).
+ * so they will be scrolled into visibility in the ~~jam~~ window (yuck!).
  */
 #define	GROWDATASIZE	50	/* if size is > this, send data with grow */
 

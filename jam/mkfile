@@ -1,6 +1,6 @@
 </$objtype/mkfile
 
-TARG=sam
+TARG=jam
 OFILES=sam.$O\
 	address.$O\
 	buff.$O\

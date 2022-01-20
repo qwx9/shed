@@ -119,6 +119,7 @@ menu3hit(void)
 	int m, i;
 	Text *t;
 
+	l = which;
 	mw = -1;
 	switch(m = menuhit(3, mousectl, &menu3, nil)){
 	case -1:
@@ -131,46 +132,29 @@ menu3hit(void)
 
 	case Zerox:
 	case Resize:
-		if(!hostlock){
-			setcursor(mousectl, &bullseye);
-			buttons(Down);
-			if((mousep->buttons&4) && (l = flwhich(mousep->xy)) && getr(&r))
-				duplicate(l, r, l->f.font, m==Resize);
-			else
-				setcursor(mousectl, cursor);
-			buttons(Up);
-		}
+		if(hostlock || l == nil)
+			break;
+		if(promptrect(&r))
+			duplicate(l, r, l->f.font, m == Resize);
 		break;
 
 	case Close:
-		if(!hostlock){
-			setcursor(mousectl, &bullseye);
-			buttons(Down);
-			if((mousep->buttons&4) && (l = flwhich(mousep->xy)) && !hostlock){
-				t=(Text *)l->user1;
-				if (t->nwin>1)
-					closeup(l);
-				else if(t!=&cmd) {
-					outTs(Tclose, t->tag);
-					setlock();
-				}
-			}
-			setcursor(mousectl, cursor);
-			buttons(Up);
+		if(hostlock || l == nil)
+			break;
+		t=(Text *)l->user1;
+		if (t->nwin>1)
+			closeup(l);
+		else if(t!=&cmd) {
+			outTs(Tclose, t->tag);
+			setlock();
 		}
 		break;
 
 	case Write:
-		if(!hostlock){
-			setcursor(mousectl, &bullseye);
-			buttons(Down);
-			if((mousep->buttons&4) && (l = flwhich(mousep->xy))){
-				outTs(Twrite, ((Text *)l->user1)->tag);
-				setlock();
-			}else
-				setcursor(mousectl, cursor);
-			buttons(Up);
-		}
+		if(hostlock || l == nil)
+			break;
+		outTs(Twrite, ((Text *)l->user1)->tag);
+		setlock();
 		break;
 
 	default:
@@ -197,23 +181,27 @@ sweeptext(int new, int tag)
 	Rectangle r;
 	Text *t;
 
-	if(getr(&r) && (t = malloc(sizeof(Text)))){
-		memset((void*)t, 0, sizeof(Text));
-		current((Flayer *)0);
-		flnew(&t->l[0], gettext, 0, (char *)t);
-		flinit(&t->l[0], r, font, maincols);	/*bnl*/
-		t->nwin = 1;
+	if((t = mallocz(sizeof(*t), 1)) == nil)
+		return nil;
+	if(new)
+		r = inflatepoint(mousep->xy);
+	else
+		r = defaultrect();
+	if(Dx(r) < 2*FLMARGIN || Dy(r) < 2*FLMARGIN)
+		r = cmd.l[cmd.front].entire;
+	current((Flayer *)0);
+	flnew(&t->l[0], gettext, 0, (char *)t);
+	flinit(&t->l[0], r, font, maincols);	/*bnl*/
+	t->nwin = 1;
+	rinit(&t->rasp);
+	if(new)
+		startnewfile(Tstartnewfile, t);
+	else{
 		rinit(&t->rasp);
-		if(new)
-			startnewfile(Tstartnewfile, t);
-		else{
-			rinit(&t->rasp);
-			t->tag = tag;
-			startfile(t);
-		}
-		return t;
+		t->tag = tag;
+		startfile(t);
 	}
-	return 0;
+	return t;
 }
 
 int

@@ -44,6 +44,8 @@ threadmain(int argc, char *argv[])
 	nscralloc = 100;
 	r = screen->r;
 	r.max.y = r.min.y+Dy(r)/5;
+	if(Dy(r) < font->height)
+		r.max.y = r.min.y + font->height + 2*FLMARGIN;
 	flstart(screen->clipr);
 	rinit(&cmd.rasp);
 	flnew(&cmd.l[0], gettext, 1, &cmd);
@@ -240,30 +242,66 @@ buttons(int updown)
 		getmouse();
 }
 
-int
-getr(Rectangle *rp)
+Rectangle
+inflatepoint(Point p)
 {
-	Point p;
+	Rectangle *c;
 	Rectangle r;
-
-	*rp = getrect(3, mousectl);
-	if(rp->max.x && rp->max.x-rp->min.x<=5 && rp->max.y-rp->min.y<=5){
-		p = rp->min;
-		r = cmd.l[cmd.front].entire;
-		*rp = screen->r;
-		if(cmd.nwin==1){
-			if (p.y <= r.min.y)
-				rp->max.y = r.min.y;
-			else if (p.y >= r.max.y)
-				rp->min.y = r.max.y;
-			if (p.x <= r.min.x)
-				rp->max.x = r.min.x;
-			else if (p.x >= r.max.x)
-				rp->min.x = r.max.x;
-		}
+	
+	r = screen->r;
+	c = &cmd.l[cmd.front].entire;
+	if(ptinrect(p, *c))
+		return r;
+	// L
+	if(p.x < c->min.x)
+		r.max.x = c->min.x;
+	// R
+	else if(p.x >= c->max.x)
+		r.min.x = c->max.x;
+	// M
+	else{
+		r.min.x = c->min.x;
+		//r.max.x = screen->max.x;
+		// A
+		if(p.y <= c->min.y)
+			r.max.y = c->min.y;
+		// B
+		else
+			r.min.y = c->max.y;
 	}
-	return rectclip(rp, screen->r) &&
-	   rp->max.x-rp->min.x>100 && rp->max.y-rp->min.y>40;
+	return r;
+}
+
+Rectangle
+defaultrect(void)
+{
+	Rectangle *c;
+	Rectangle L, M, R;
+
+	c = &cmd.l[cmd.front].entire;
+	L = inflatepoint(Pt(c->min.x - 1, c->min.y));
+	M = inflatepoint(Pt(c->min.x, c->max.y));
+	R = inflatepoint(Pt(c->max.x + 1, c->min.y));
+	if(Dx(L) >= Dx(M) && Dx(L) >= Dx(R))
+		return L;
+	else if(Dx(M) > Dx(L) && Dx(M) > Dx(R))
+		return M;
+	return R;
+}
+
+int
+promptrect(Rectangle *r)
+{
+	*r = getrect(3, mousectl);
+	if(eqrect(*r, Rect(0,0,0,0)))
+		return 0;
+	if(Dx(*r) < 8*font->width && Dy(*r) < 2*font->height)
+		*r = inflatepoint(r->min);
+	if(rectclip(r, screen->r) == 0)
+		*r = defaultrect();
+	if(Dx(*r) < 2*FLMARGIN || Dy(*r) < 2*FLMARGIN)
+		*r = cmd.l[cmd.front].entire;
+	return 1;
 }
 
 void

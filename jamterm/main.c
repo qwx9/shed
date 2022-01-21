@@ -163,7 +163,9 @@ warpmouse(Flayer *l)
 
 	if(l == nil || ptinrect(mousectl->xy, l->entire))
 		return;
-	p = addpt(l->entire.min, divpt(subpt(l->entire.max, l->entire.min), 2));
+	p = l->warpto;
+	if(eqpt(p, ZP))
+		p = addpt(l->entire.min, divpt(subpt(l->entire.max, l->entire.min), 2));
 	moveto(mousectl, p);
 }
 
@@ -172,8 +174,11 @@ current(Flayer *nw, int warp)
 {
 	Text *t;
 
-	if(which)
+	if(which){
 		flborder(which, 0);
+		if(warp)
+			which->warpto = mousectl->xy;
+	}
 	if(nw){
 		flushtyping(1);
 		flupfront(nw);

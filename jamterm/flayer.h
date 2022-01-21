@@ -16,6 +16,7 @@ struct Flayer
 	long		origin;	/* offset of first char in flayer */
 	long		p0, p1;
 	long		click;	/* time at which selection click occurred, in HZ */
+	Point		warpto;
 	Rune		*(*textfn)(Flayer*, long, ulong*);
 	int		user0;
 	void		*user1;

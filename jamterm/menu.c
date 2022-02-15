@@ -167,7 +167,7 @@ menu3hit(void)
 					if(++i==NL)
 						i = 0;
 				while(i!=t->front && t->l[i].textfn==0);
-			current(&t->l[i], 0);
+			current(&t->l[i], 1);
 		}else if(!hostlock)
 			sweeptext(0, tag[m-NMENU3]);
 		break;

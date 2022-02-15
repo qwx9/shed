@@ -143,7 +143,7 @@ inmesg(Hmesg type, int count)
 			flborder(lp, 0);
 			work = lp;
 		}else
-			current(lp, 0);
+			current(lp, 1);
 		break;
 
 	case Hmovname:

@@ -85,7 +85,7 @@ threadmain(int argc, char *argv[])
 			if(nwhich && nwhich!=which){
 				Point p = mousep->xy;
 				int b = mousep->buttons;
-				current(nwhich, 0);
+				current(nwhich, 1);
 				mousep->xy = p;
 				mousep->buttons = b;
 			}
@@ -113,7 +113,7 @@ threadmain(int argc, char *argv[])
 				if(scr)
 					scroll(which, (mousep->buttons&8) ? 4 : 1);
 				else if(nwhich && nwhich!=which)
-					current(nwhich, 0);
+					current(nwhich, 1);
 				else{
 					t=(Text *)which->user1;
 					nclick = flselect(which, &p);
@@ -176,7 +176,7 @@ current(Flayer *nw, int warp)
 
 	if(which){
 		flborder(which, 0);
-		if(warp)
+		if(warp && ptinrect(mousectl->xy, which->entire))
 			which->warpto = mousectl->xy;
 	}
 	if(nw){
@@ -206,7 +206,7 @@ closeup(Flayer *l)
 	flclose(l);
 	if(l == which){
 		which = 0;
-		current(flwhich(Pt(0, 0)), 0);
+		current(flwhich(Pt(0, 0)), 1);
 	}
 	if(l == work)
 		work = 0;

@@ -736,6 +736,12 @@ type(Flayer *l, int res)	/* what a bloody mess this is */
  		}
  		t = (Text*)work->user1;
  		l = &t->l[t->front];
+		if(t->nwin == 1 && nname > 1){
+			t = filecycle(t);
+			l = &t->l[t->front];
+			current(l, 1);
+			return;
+		}
  		for(i=t->front; t->nwin>1 && (i = (i+1)%NL) != t->front; )
  			if(t->l[i].textfn != 0){
  				l = &t->l[i];

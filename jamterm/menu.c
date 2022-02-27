@@ -204,6 +204,27 @@ sweeptext(int new, int tag)
 	return t;
 }
 
+Text *
+filecycle(Text *t)
+{
+	int i;
+	Text *t´;
+
+	for(i=0; text[i]!=t; i++)
+		if(i == nname)
+			abort();
+	for(i++; text[i]!=t; i++){
+		if(i == nname)
+			i = 1;
+		t´ = text[i];
+		if(t´ == nil)
+			continue;
+		if(t´->nwin != 0 && t´->l[t´->front].textfn != nil)
+			break;
+	}
+	return text[i];
+}
+
 int
 whichmenu(int tg)
 {

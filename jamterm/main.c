@@ -67,7 +67,7 @@ threadmain(int argc, char *argv[])
 		if(got&(1<<RPlumb)){
 			for(i=0; cmd.l[i].textfn==0; i++)
 				;
-			current(&cmd.l[i], 1);
+			current(&cmd.l[i], 0);
 			flsetselect(which, cmd.rasp.nrunes, cmd.rasp.nrunes);
 			type(which, RPlumb);
 		}
@@ -82,13 +82,8 @@ threadmain(int argc, char *argv[])
 				continue;
 			}
 			nwhich = flwhich(mousep->xy);
-			if(nwhich && nwhich!=which){
-				Point p = mousep->xy;
-				int b = mousep->buttons;
+			if(nwhich && nwhich!=which)
 				current(nwhich, 1);
-				mousep->xy = p;
-				mousep->buttons = b;
-			}
 			scr = which && (ptinrect(mousep->xy, which->scroll) ||
 				mousep->buttons&(8|16));
 			if(mousep->buttons)
@@ -176,14 +171,14 @@ current(Flayer *nw, int warp)
 
 	if(which){
 		flborder(which, 0);
-		if(warp && ptinrect(mousectl->xy, which->entire))
+		if(warp && ptinrect(mousectl->xy, insetrect(which->entire, 1)))
 			which->warpto = mousectl->xy;
 	}
 	if(nw){
 		flushtyping(1);
 		flupfront(nw);
 		flborder(nw, 1);
-		buttons(Up);
+		//buttons(Up);
 		t = (Text *)nw->user1;
 		t->front = nw-&t->l[0];
 		if(t != &cmd)
@@ -198,15 +193,17 @@ void
 closeup(Flayer *l)
 {
 	Text *t=(Text *)l->user1;
-	int m;
+	int i, m;
 
 	m = whichmenu(t->tag);
 	if(m < 0)
 		return;
 	flclose(l);
 	if(l == which){
-		which = 0;
-		current(flwhich(Pt(0, 0)), 1);
+		which = nil;
+		for(i=0; cmd.l[i].textfn==0; i++)
+			;
+		current(&cmd.l[i], 1);
 	}
 	if(l == work)
 		work = 0;

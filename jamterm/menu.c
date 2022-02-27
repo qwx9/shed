@@ -121,6 +121,10 @@ menu3hit(void)
 
 	l = which;
 	mw = -1;
+	if(l != nil){
+		t = (Text *)l->user1;
+		menu3.lasthit = whichmenu(t->tag) + NMENU3;
+	}
 	switch(m = menuhit(3, mousectl, &menu3, nil)){
 	case -1:
 		break;

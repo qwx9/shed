@@ -83,7 +83,7 @@ flinit(Flayer *l, Rectangle r, Font *ft, Image **cols)
 	draw(screen, l->entire, l->f.cols[BACK], nil, ZP);
 	scrdraw(l, 0L);
 	flborder(l, 0);
-	l->warpto = divpt(subpt(l->entire.max, screen->r.min), 2);
+	l->warpto = addpt(l->entire.min, divpt(subpt(l->entire.max, l->entire.min), 2));
 }
 
 void

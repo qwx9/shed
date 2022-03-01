@@ -159,8 +159,10 @@ warpmouse(Flayer *l)
 	if(l == nil || ptinrect(mousectl->xy, l->entire))
 		return;
 	p = addpt(screen->r.min, l->warpto);
-	if(eqpt(p, ZP))
+	if(eqpt(p, ZP) || !ptinrect(p, l->entire)){
 		p = addpt(l->entire.min, divpt(subpt(l->entire.max, l->entire.min), 2));
+		l->warpto = p;
+	}
 	moveto(mousectl, p);
 }
 

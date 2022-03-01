@@ -73,6 +73,8 @@ flrect(Flayer *l, Rectangle r)
 void
 flinit(Flayer *l, Rectangle r, Font *ft, Image **cols)
 {
+	Rectangle wr;
+
 	lldelete(l);
 	llinsert(l);
 	l->visible = All;
@@ -83,7 +85,8 @@ flinit(Flayer *l, Rectangle r, Font *ft, Image **cols)
 	draw(screen, l->entire, l->f.cols[BACK], nil, ZP);
 	scrdraw(l, 0L);
 	flborder(l, 0);
-	l->warpto = addpt(l->entire.min, divpt(subpt(l->entire.max, l->entire.min), 2));
+	wr = rectsubpt(l->entire, screen->r.min);
+	l->warpto = addpt(wr.min, divpt(subpt(wr.max, wr.min), 2));
 }
 
 void

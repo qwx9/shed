@@ -158,7 +158,7 @@ warpmouse(Flayer *l)
 
 	if(l == nil || ptinrect(mousectl->xy, l->entire))
 		return;
-	p = l->warpto;
+	p = addpt(screen->r.min, l->warpto);
 	if(eqpt(p, ZP))
 		p = addpt(l->entire.min, divpt(subpt(l->entire.max, l->entire.min), 2));
 	moveto(mousectl, p);
@@ -172,7 +172,7 @@ current(Flayer *nw, int warp)
 	if(which){
 		flborder(which, 0);
 		if(warp && ptinrect(mousectl->xy, insetrect(which->entire, 1)))
-			which->warpto = mousectl->xy;
+			which->warpto = subpt(mousectl->xy, screen->r.min);
 	}
 	if(nw){
 		flushtyping(1);

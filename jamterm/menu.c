@@ -214,19 +214,21 @@ filecycle(Text *t)
 	int i;
 	Text *t´;
 
+	if(t == nil)
+		t = &cmd;
 	for(i=0; text[i]!=t; i++)
 		if(i == nname)
 			abort();
-	for(i++; text[i]!=t; i++){
-		if(i == nname)
-			i = 1;
+	for(i=(i+1)%nname; text[i]!=t; i=(i+1)%nname){
 		t´ = text[i];
-		if(t´ == nil)
+		if(t´ == nil || t´ == &cmd)
 			continue;
-		if(t´->nwin != 0 && t´->l[t´->front].textfn != nil)
+		if(t´->nwin != 0 && t´->l[t´->front].textfn != nil){
+			t = t´;
 			break;
+		}
 	}
-	return text[i];
+	return t;
 }
 
 int

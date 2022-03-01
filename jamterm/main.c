@@ -726,27 +726,26 @@ type(Flayer *l, int res)	/* what a bloody mess this is */
 		flsetselect(l, a, a);
 		center(l, a);
  	}else if(c == Kbel){
- 		int i;
- 		if(work == nil)
- 			return;
- 		if(which != work){
- 			current(work, 1);
- 			return;
- 		}
- 		t = (Text*)work->user1;
- 		l = &t->l[t->front];
-		if(t->nwin == 1 && nname > 1){
+		t = &cmd;
+		if(work != nil){
+			if(which != work){
+				current(work, 1);
+				return;
+			}
+	 		t = (Text*)work->user1;
+			l = &t->l[t->front];
+		}
+		if(t == &cmd || t->nwin == 1 && nname > 1){
 			t = filecycle(t);
 			l = &t->l[t->front];
-			current(l, 1);
-			return;
+		}else{
+	 		for(int i=t->front; (i = (i+1)%NL) != t->front; )
+	 			if(t->l[i].textfn != 0){
+	 				l = &t->l[i];
+	 				break;
+	 			}
 		}
- 		for(i=t->front; t->nwin>1 && (i = (i+1)%NL) != t->front; )
- 			if(t->l[i].textfn != 0){
- 				l = &t->l[i];
- 				break;
- 			}
- 		current(l, 1);
+		current(l, 1);
 	}else{
 		if(c==Kesc && typeesc>=0){
 			l->p0 = typeesc;

@@ -24,13 +24,55 @@ void		lldelete(Flayer*);
 Image	*maincols[NCOL];
 Image	*cmdcols[NCOL];
 
+static void
+snarftheme(u32int mcol[NCOL], u32int ccol[NCOL])
+{
+	char p[128], *s, *v[3], *h;
+	Biobuf *bf;
+
+	if((h = getenv("home")) == nil){
+		fprint(2, "snarftheme: %r\n");
+		return;
+	}
+	snprint(p, sizeof p, "%s/lib/theme/jam", h);
+	free(h);
+	if((bf = Bopen(p, OREAD)) == nil){
+		fprint(2, "snarftheme: %r\n");
+		return;
+	}
+	while((s = Brdline(bf, '\n')) != nil){
+		s[Blinelen(bf)-1] = 0;
+		if(tokenize(s, v, nelem(v)) <= 0)
+			continue;
+		if(strcmp(v[0], "rioback") == 0)
+			mcol[BACK] = strtoul(v[1], nil, 16)<<8 | 0xff;
+		else if(strcmp(v[0], "high") == 0)
+			mcol[HIGH] = strtoul(v[1], nil, 16)<<8 | 0xff;
+		else if(strcmp(v[0], "border") == 0)
+			mcol[BORD] = strtoul(v[1], nil, 16)<<8 | 0xff;
+		else if(strcmp(v[0], "text") == 0)
+			mcol[TEXT] = strtoul(v[1], nil, 16)<<8 | 0xff;
+		else if(strcmp(v[0], "back") == 0)
+			mcol[HTEXT] = strtoul(v[1], nil, 16)<<8 | 0xff;
+		else if(strcmp(v[0], "menuback") == 0)
+			ccol[BACK] = strtoul(v[1], nil, 16)<<8 | 0xff;	
+		else if(strcmp(v[0], "menuhigh") == 0)
+			ccol[HIGH] = strtoul(v[1], nil, 16)<<8 | 0xff;	
+		else if(strcmp(v[0], "lhold") == 0)
+			ccol[BORD] = strtoul(v[1], nil, 16)<<8 | 0xff;	
+		else if(strcmp(v[0], "hold") == 0)
+			ccol[TEXT] = strtoul(v[1], nil, 16)<<8 | 0xff;	
+		else if(strcmp(v[0], "menuhtext") == 0)
+			ccol[HTEXT] = strtoul(v[1], nil, 16)<<8 | 0xff;	
+	}
+	Bterm(bf);
+}
+
 void
 flstart(Rectangle r)
 {
 	int i;
 	u32int mcol[NCOL], ccol[NCOL];
-	char *s, *v[3];
-	Biobuf *bf;
 
 	lDrect = r;
 	mcol[BACK] = DBlack;
@@ -43,36 +85,9 @@ flstart(Rectangle r)
 	ccol[BORD] = 0xDCBC72FF;
 	ccol[TEXT] = 0xFFAD00FF;
 	ccol[HTEXT] = DBlack;
-	if((bf = Bopen("/dev/theme", OREAD)) != nil){
-		while((s = Brdline(bf, '\n')) != nil){
-			s[Blinelen(bf)-1] = 0;
-			if(tokenize(s, v, nelem(v)) <= 0)
-				continue;
-			if(strcmp(v[0], "rioback") == 0)
-				mcol[BACK] = strtoul(v[1], nil, 16)<<8 | 0xff;
-			else if(strcmp(v[0], "high") == 0)
-				mcol[HIGH] = strtoul(v[1], nil, 16)<<8 | 0xff;
-			else if(strcmp(v[0], "border") == 0)
-				mcol[BORD] = strtoul(v[1], nil, 16)<<8 | 0xff;
-			else if(strcmp(v[0], "text") == 0)
-				mcol[TEXT] = strtoul(v[1], nil, 16)<<8 | 0xff;
-			else if(strcmp(v[0], "back") == 0)
-				mcol[HTEXT] = strtoul(v[1], nil, 16)<<8 | 0xff;
-			else if(strcmp(v[0], "menuback") == 0)
-				ccol[BACK] = strtoul(v[1], nil, 16)<<8 | 0xff;	
-			else if(strcmp(v[0], "menuhigh") == 0)
-				ccol[HIGH] = strtoul(v[1], nil, 16)<<8 | 0xff;	
-			else if(strcmp(v[0], "lhold") == 0)
-				ccol[BORD] = strtoul(v[1], nil, 16)<<8 | 0xff;	
-			else if(strcmp(v[0], "hold") == 0)
-				ccol[TEXT] = strtoul(v[1], nil, 16)<<8 | 0xff;	
-			else if(strcmp(v[0], "menuhtext") == 0)
-				ccol[HTEXT] = strtoul(v[1], nil, 16)<<8 | 0xff;	
-		}
-		Bterm(bf);
-	}
+	snarftheme(mcol, ccol);
 	for(i=0; i<NCOL; i++){
-		r = BORD ? Rect(0,0,2,2) : Rect(0,0,1,1);
+		r = i == BORD ? Rect(0,0,2,2) : Rect(0,0,1,1);
  		maincols[i] = allocimage(display, r, screen->chan, 1, mcol[i]);
  		cmdcols[i] = allocimage(display, r, screen->chan, 1, ccol[i]);
  	}

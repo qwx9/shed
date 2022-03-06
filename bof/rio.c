@@ -719,6 +719,7 @@ button3menu(void)
 		menu3str[i] = nil;
 	}
 	sweeping = TRUE;
+	menu3.lasthit = 0;
 	switch(i = menuhit(3, mousectl, &menu3, wscreen)){
 	case -1:
 		break;

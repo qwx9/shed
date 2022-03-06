@@ -138,7 +138,7 @@ menuhit(int but, Mousectl *mc, Menu *menu, Screen *scr)
 		if(i > maxwid)
 			maxwid = i;
 	}
-	if(menu->lasthit<0 || menu->lasthit>=nitem)
+	if(but == 3 || menu->lasthit<0 || menu->lasthit>=nitem)
 		menu->lasthit = 0;
 	screenitem = (Dy(screen->r)-10)/(font->height+Vspacing);
 	if(nitem>Maxunscroll || nitem>screenitem){

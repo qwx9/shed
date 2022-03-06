@@ -185,33 +185,169 @@ Cursor *corners[9] = {
 	&bl,	&b,	&br,
 };
 
+enum {
+	Noredraw	= 1,
+	Rgbcol	= 2,
+	Imagecol	= 3,
+};
+
+typedef struct Color Color;
+
+struct Color {
+	char *id;
+	int type;
+	union {
+		u32int rgb;
+		char *path;
+	};
+	int flags;
+};
+
+static Color theme[Numcolors] = {
+	[Colrioback]   = {"rioback",   Rgbcol, {0x777777}, 0},
+	[Colback]      = {"back",      Rgbcol, {0xffffff}, 0},
+	[Colhigh]      = {"high",      Rgbcol, {0xcccccc}, 0},
+	[Colbord]      = {"border",    Rgbcol, {0x999999}, 0},
+	[Coltext]      = {"text",      Rgbcol, {DBlack>>8}, 0},
+	[Colhtext]     = {"htext",     Rgbcol, {DBlack>>8}, 0},
+	[Coltitle]     = {"title",     Rgbcol, {DGreygreen>>8}, 0},
+	[Colltitle]    = {"ltitle",    Rgbcol, {DPalegreygreen>>8}, 0},
+	[Colhold]      = {"hold",      Rgbcol, {DMedblue>>8}, 0},
+	[Collhold]     = {"lhold",     Rgbcol, {DGreyblue>>8}, 0},
+	[Colpalehold]  = {"palehold",  Rgbcol, {DPalegreyblue>>8}, 0},
+	[Colpaletext]  = {"paletext",  Rgbcol, {0x666666}, 0},
+	[Colsize]      = {"size",      Rgbcol, {DRed>>8}, 0},
+	[Colmenubar]   = {"menubar",   Rgbcol, {DDarkgreen>>8}, Noredraw},
+	[Colmenuback]  = {"menuback",  Rgbcol, {0xeaffea}, Noredraw},
+	[Colmenuhigh]  = {"menuhigh",  Rgbcol, {DDarkgreen>>8}, Noredraw},
+	[Colmenubord]  = {"menubord",  Rgbcol, {DMedgreen>>8}, Noredraw},
+	[Colmenutext]  = {"menutext",  Rgbcol, {DBlack>>8}, Noredraw},
+	[Colmenuhtext] = {"menuhtext", Rgbcol, {0xeaffea}, Noredraw},
+};
+
+Image *col[Numcolors];
+
+static char *
+readall(int f, int *osz)
+{
+	int bufsz, sz, n;
+	char *s;
+
+	bufsz = 1023;
+	s = nil;
+	for(sz = 0;; sz += n){
+		if(bufsz-sz < 1024){
+			bufsz *= 2;
+			s = realloc(s, bufsz);
+		}
+		if((n = readn(f, s+sz, bufsz-sz-1)) < 1)
+			break;
+	}
+	if(n < 0 || sz < 1){
+		free(s);
+		return nil;
+	}
+	s[sz] = 0;
+	*osz = sz;
+
+	return s;
+}
+
 void
 iconinit(void)
 {
-	background = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x777777FF);
+	int i, f, sz;
+	char *s;
 
-	/* greys are multiples of 0x11111100+0xFF, 14* being palest */
-	cols[BACK] = allocimage(display, Rect(0,0,1,1), CMAP8, 1, 0xFFFFFFFF^reverse);
-	cols[BORD] = allocimage(display, Rect(0,0,1,1), CMAP8, 1, 0x999999FF^reverse);
-	cols[TEXT] = allocimage(display, Rect(0,0,1,1), CMAP8, 1, 0x000000FF^reverse);
-	cols[HTEXT] = allocimage(display, Rect(0,0,1,1), CMAP8, 1, 0x000000FF);
-	if(!reverse) {
-		cols[HIGH] = allocimage(display, Rect(0,0,1,1), CMAP8, 1, 0xCCCCCCFF);
-		titlecol = allocimage(display, Rect(0,0,1,1), CMAP8, 1, DGreygreen);
-		lighttitlecol = allocimage(display, Rect(0,0,1,1), CMAP8, 1, DPalegreygreen);
-	} else {
-		cols[HIGH] = allocimage(display, Rect(0,0,1,1), CMAP8, 1, DPurpleblue);
-		titlecol = allocimage(display, Rect(0,0,1,1), CMAP8, 1, DPurpleblue);
-		lighttitlecol = allocimage(display, Rect(0,0,1,1), CMAP8, 1, 0x222222FF);
+	if((f = open("/dev/theme", OREAD|OCEXEC)) >= 0){
+		if((s = readall(f, &sz)) != nil)
+			themeload(s, sz);
+		free(s);
+		close(f);
 	}
-	dholdcol = allocimage(display, Rect(0,0,1,1), CMAP8, 1, DMedblue);
-	lightholdcol = allocimage(display, Rect(0,0,1,1), CMAP8, 1, DGreyblue);
-	paleholdcol = allocimage(display, Rect(0,0,1,1), CMAP8, 1, DPalegreyblue);
-	paletextcol = allocimage(display, Rect(0,0,1,1), CMAP8, 1, 0x666666FF^reverse);
-	sizecol = allocimage(display, Rect(0,0,1,1), CMAP8, 1, DRed);
 
-	if(reverse == 0)
-		holdcol = dholdcol;
-	else
-		holdcol = paleholdcol;
+	for(i = 0; i < nelem(col); i++){
+		if(col[i] == nil)
+			col[i] = allocimage(display, Rect(0,0,1,1), RGB24, 1, theme[i].rgb<<8|0xff);
+	}
+}
+void redraw(void);
+void
+themeload(char *s, int n)
+{
+	int i, fd;
+	char *t, *a[2], *e, *newp;
+	Image *newc, *repl;
+	u32int rgb;
+
+	if((t = malloc(n+1)) == nil)
+		return;
+	memmove(t, s, n);
+	t[n] = 0;
+
+	for(s = t; s != nil && *s; s = e){
+		if((e = strchr(s, '\n')) != nil)
+			*e++ = 0;
+		if(tokenize(s, a, 2) == 2){
+			for(i = 0; i < nelem(theme); i++) {
+				if(strcmp(theme[i].id, a[0]) == 0) {
+					newc = nil;
+					if(a[1][0] == '/'){
+						if((fd = open(a[1], OREAD)) >= 0){
+							if ((newc = readimage(display, fd, 0)) == nil)
+								goto End;
+							close(fd);
+							if ((repl = allocimage(display, Rect(0, 0, Dx(newc->r), Dy(newc->r)), RGB24, 1, 0x000000ff)) == nil)
+								goto End;
+							if (theme[i].type == Imagecol)
+								free(theme[i].path);
+							if ((newp = strdup(a[1])) == nil)
+								goto End;
+							theme[i].type = Imagecol;
+							theme[i].path = newp;
+							draw(repl, repl->r, newc, 0, newc->r.min);
+							freeimage(newc);
+							newc = repl;
+						}
+					}else{
+						rgb = strtoul(a[1], nil, 16);
+						if((newc = allocimage(display, Rect(0, 0, 1, 1), RGB24, 1, rgb<<8 | 0xff)) != nil) {
+							if (theme[i].type == Imagecol)
+								free(theme[i].path);
+							theme[i].type = Rgbcol;
+							theme[i].rgb = rgb;
+						}
+					}
+					if(new != nil){
+						freeimage(col[i]);
+						col[i] = newc;
+					}
+					break;
+				}
+			}
+		}
+	}
+End:
+	free(t);
+	redraw();
+}
+
+char *
+themestring(int *n)
+{
+	char *s, *t, *e;
+	int i;
+
+	if((t = malloc(512)) != nil){
+		s = t;
+		e = s+512;
+		for(i = 0; i < nelem(theme); i++)
+			if (theme[i].type == Rgbcol)
+				s = seprint(s, e, "%s\t%06ux\n", theme[i].id, theme[i].rgb);
+			else if (theme[i].type == Imagecol)
+				s = seprint(s, e, "%s\t%s\n", theme[i].id, theme[i].path);
+		*n = s - t;
+	}
+
+	return t;
 }

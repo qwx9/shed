@@ -293,37 +293,24 @@ wsetselect(Window *w, uint q0, uint q1)
 static void
 wborder(Window *w, int type)
 {
-	Image *col;
+	Image *c;
 
 	if(w->i == nil)
 		return;
-	if(w->holding){
-		if(type == Selborder)
-			col = holdcol;
-		else
-			col = paleholdcol;
-	}else{
-		if(type == Selborder)
-			col = titlecol;
-		else
-			col = lighttitlecol;
-	}
-	border(w->i, w->i->r, Selborder, col, ZP);
+	if(w->holding)
+		c = col[type == Selborder ? Colhold : Colpalehold];
+	else
+		c = col[type == Selborder ? Coltitle : Colltitle];
+	border(w->i, w->i->r, Selborder, c, ZP);
 }
 
 static void
 wsetcols(Window *w, int topped)
 {
 	if(w->holding)
-		if(topped)
-			w->cols[TEXT] = holdcol;
-		else
-			w->cols[TEXT] = lightholdcol;
+		w->cols[TEXT] = col[topped ? Colhold : Collhold];
 	else
-		if(topped)
-			w->cols[TEXT] = cols[TEXT];
-		else
-			w->cols[TEXT] = paletextcol;
+		w->cols[TEXT] = col[topped ? Coltext : Colpaletext];
 }
 
 void
@@ -359,12 +346,12 @@ wresize(Window *w, Image *i)
 	w->lastsr = ZR;
 	r.min.x += Scrollwid+Scrollgap;
 	frclear(w, FALSE);
-	frinit(w, r, w->font, w->i, cols);
+	frinit(w, r, w->font, w->i, &col[Colback]);
 	wsetcols(w, w == input);
 	w->maxtab = maxtab*stringwidth(w->font, "0");
 	if(!w->mouseopen || !w->winnameread){
 		r = insetrect(w->i->r, Selborder);
-		draw(w->i, r, cols[BACK], nil, w->entire.min);
+		draw(w->i, r, col[Colback], nil, w->entire.min);
 		wfill(w);
 		wsetselect(w, w->q0, w->q1);
 		wscrdraw(w);
@@ -1266,7 +1253,7 @@ wmk(Image *i, Mousectl *mc, Channel *ck, Channel *cctl, int scrolling)
 	w->scrollr.max.x = r.min.x+Scrollwid;
 	w->lastsr = ZR;
 	r.min.x += Scrollwid+Scrollgap;
-	frinit(w, r, font, i, cols);
+	frinit(w, r, font, i, &col[Colback]);
 	w->maxtab = maxtab*stringwidth(font, "0");
 	w->topped = ++topped;
 	w->id = ++id;
@@ -1275,7 +1262,7 @@ wmk(Image *i, Mousectl *mc, Channel *ck, Channel *cctl, int scrolling)
 	w->dir = estrdup(startdir);
 	w->label = estrdup("<unnamed>");
 	r = insetrect(w->i->r, Selborder);
-	draw(w->i, r, cols[BACK], nil, w->entire.min);
+	draw(w->i, r, col[Colback], nil, w->entire.min);
 	wborder(w, Selborder);
 	wscrdraw(w);
 	incref(w);	/* ref will be removed after mounting; avoids delete before ready to be deleted */

@@ -1,11 +1,12 @@
 </$objtype/mkfile
 BIN=/$objtype/bin
 
-TARG=rio
+TARG=bof
 OFILES=\
 	rio.$O\
 	data.$O\
 	fsys.$O\
+	menuhit.$O\
 	scrl.$O\
 	time.$O\
 	util.$O\

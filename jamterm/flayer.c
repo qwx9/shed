@@ -1,5 +1,6 @@
 #include <u.h>
 #include <libc.h>
+#include <bio.h>
 #include <draw.h>
 #include <thread.h>
 #include <mouse.h>
@@ -26,21 +27,55 @@ Image	*cmdcols[NCOL];
 void
 flstart(Rectangle r)
 {
+	int i;
+	u32int mcol[NCOL], ccol[NCOL];
+	char *s, *v[3];
+	Biobuf *bf;
+
 	lDrect = r;
-
-	/* Main text is yellowish */
-	maincols[BACK] = display->black;
-	maincols[HIGH] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x440000FF);
-	maincols[BORD] = allocimage(display, Rect(0,0,2,2), screen->chan, 1, 0x222222FF);
-	maincols[TEXT] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x884400FF);
-	maincols[HTEXT] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x884400FF);
-
-	/* Command text is blueish */
-	cmdcols[BACK] = display->black;
-	cmdcols[HIGH] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x111111FF);
-	cmdcols[BORD] = allocimage(display, Rect(0,0,2,2), screen->chan, 1, 0x440000FF);
-	cmdcols[TEXT] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x770000FF);
-	cmdcols[HTEXT] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x770000FF);
+	mcol[BACK] = DBlack;
+	mcol[HIGH] = 0x8F8F8FFF;
+	mcol[BORD] = 0x363636FF;
+	mcol[TEXT] = DWhite;
+	mcol[HTEXT] = DBlack;
+	ccol[BACK] = DBlack;
+	ccol[HIGH] = 0x9C9C9CFF;
+	ccol[BORD] = 0xDCBC72FF;
+	ccol[TEXT] = 0xFFAD00FF;
+	ccol[HTEXT] = DBlack;
+	if((bf = Bopen("/dev/theme", OREAD)) != nil){
+		while((s = Brdline(bf, '\n')) != nil){
+			s[Blinelen(bf)-1] = 0;
+			if(tokenize(s, v, nelem(v)) <= 0)
+				continue;
+			if(strcmp(v[0], "rioback") == 0)
+				mcol[BACK] = strtoul(v[1], nil, 16)<<8 | 0xff;
+			else if(strcmp(v[0], "high") == 0)
+				mcol[HIGH] = strtoul(v[1], nil, 16)<<8 | 0xff;
+			else if(strcmp(v[0], "border") == 0)
+				mcol[BORD] = strtoul(v[1], nil, 16)<<8 | 0xff;
+			else if(strcmp(v[0], "text") == 0)
+				mcol[TEXT] = strtoul(v[1], nil, 16)<<8 | 0xff;
+			else if(strcmp(v[0], "back") == 0)
+				mcol[HTEXT] = strtoul(v[1], nil, 16)<<8 | 0xff;
+			else if(strcmp(v[0], "menuback") == 0)
+				ccol[BACK] = strtoul(v[1], nil, 16)<<8 | 0xff;	
+			else if(strcmp(v[0], "menuhigh") == 0)
+				ccol[HIGH] = strtoul(v[1], nil, 16)<<8 | 0xff;	
+			else if(strcmp(v[0], "lhold") == 0)
+				ccol[BORD] = strtoul(v[1], nil, 16)<<8 | 0xff;	
+			else if(strcmp(v[0], "hold") == 0)
+				ccol[TEXT] = strtoul(v[1], nil, 16)<<8 | 0xff;	
+			else if(strcmp(v[0], "menuhtext") == 0)
+				ccol[HTEXT] = strtoul(v[1], nil, 16)<<8 | 0xff;	
+		}
+		Bterm(bf);
+	}
+	for(i=0; i<NCOL; i++){
+		r = BORD ? Rect(0,0,2,2) : Rect(0,0,1,1);
+ 		maincols[i] = allocimage(display, r, screen->chan, 1, mcol[i]);
+ 		cmdcols[i] = allocimage(display, r, screen->chan, 1, ccol[i]);
+ 	}
 }
 
 void

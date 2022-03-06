@@ -26,6 +26,7 @@ void		delete(void);
 void		hide(void);
 void		unhide(int);
 void		newtile(int);
+void		confirmexit(void);
 Image*	sweep(void);
 Image*	bandsize(Window*);
 Image*	drag(Window*);
@@ -124,10 +125,6 @@ threadmain(int argc, char *argv[])
 	Image *i;
 	Rectangle r;
 
-	if(strstr(argv[0], ".out") == nil){
-		menu3str[Exit] = nil;
-		Hidden--;
-	}
 	initstr = nil;
 	kbdin = nil;
 	maxtab = 0;
@@ -741,11 +738,8 @@ button3menu(void)
 		hide();
 		break;
 	case Exit:
-		if(Hidden > Exit){
-			send(exitchan, nil);
-			break;
-		}
-		/* else fall through */
+		confirmexit();
+		break;
 	default:
 		unhide(i);
 		break;
@@ -1013,6 +1007,26 @@ delete(void)
 	w = pointto(TRUE);
 	if(w!=nil)
 		wsendctlmesg(w, Deleted, ZR, nil);
+}
+
+void
+confirmexit(void)
+{
+	menuing = TRUE;
+	riosetcursor(&confirmcursor);
+	while(mouse->buttons == 0)
+		readmouse(mousectl);
+	if(mouse->buttons != 4)
+		goto nope;
+	while(mouse->buttons){
+		if(mouse->buttons != 4)
+			goto nope;
+		readmouse(mousectl);
+	}
+	send(exitchan, nil);
+nope:
+	riosetcursor(nil);
+	menuing = FALSE;
 }
 
 void

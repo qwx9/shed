@@ -288,6 +288,7 @@ Mouse	*mouse;
 Display	*display;
 Image	*view;
 Screen	*wscreen;
+Cursor	confirmcursor;
 Cursor	boxcursor;
 Cursor	crosscursor;
 Cursor	sightcursor;

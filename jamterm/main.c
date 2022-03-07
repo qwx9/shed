@@ -172,7 +172,7 @@ current(Flayer *nw, int warp)
 
 	if(which){
 		flborder(which, 0);
-		if(warp && ptinrect(mousectl->xy, insetrect(which->entire, 1)))
+		if(warp && ptinrect(mousectl->xy, insetrect(which->entire, 4)))
 			which->warpto = subpt(mousectl->xy, screen->r.min);
 	}
 	if(nw){

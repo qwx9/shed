@@ -118,6 +118,7 @@ void	snarf(Text*, int);
 int	center(Flayer*, long);
 int	xmenuhit(int, Menu*);
 void	buttons(int);
+void	warpmouse(Flayer*);
 void	current(Flayer*, int);
 void	duplicate(Flayer*, Rectangle, Font*, int);
 void	startfile(Text*);

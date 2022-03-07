@@ -193,7 +193,7 @@ iconinit(void)
 
 	Theme th[nelem(cols)] = {
 		[Cback] { "back", 0xFFFFFFFF },
-		[Cbord] { "bord", 0x999999FF },
+		[Cbord] { "border", 0x999999FF },
 		[Ctext] { "text", DBlack },
 		[Chtext] { "htext", DBlack },
 		[Chigh] { "high", 0xCCCCCCFF },

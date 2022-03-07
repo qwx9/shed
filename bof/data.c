@@ -1,5 +1,6 @@
 #include <u.h>
 #include <libc.h>
+#include <bio.h>
 #include <draw.h>
 #include <thread.h>
 #include <cursor.h>
@@ -185,33 +186,79 @@ Cursor *corners[9] = {
 	&bl,	&b,	&br,
 };
 
+static void
+snarftheme(u32int cmap[NCOL])
+{
+	char p[128], *s, *v[3], *h;
+	Biobuf *bf;
+
+	if((h = getenv("home")) == nil){
+		fprint(2, "snarftheme: %r\n");
+		return;
+	}
+	snprint(p, sizeof p, "%s/lib/theme/rio", h);
+	free(h);
+	if((bf = Bopen(p, OREAD)) == nil){
+		fprint(2, "snarftheme: %r\n");
+		return;
+	}
+	while((s = Brdline(bf, '\n')) != nil){
+		s[Blinelen(bf)-1] = 0;
+		if(tokenize(s, v, nelem(v)) <= 0)
+			continue;
+		if(strcmp(v[0], "rioback") == 0)
+			cmap[Crioback] = strtoul(v[1], nil, 16)<<8 | 0xff;
+		else if(strcmp(v[0], "back") == 0)
+			cmap[Cback] = strtoul(v[1], nil, 16)<<8 | 0xff;	
+		else if(strcmp(v[0], "border") == 0)
+			cmap[Cbord] = strtoul(v[1], nil, 16)<<8 | 0xff;
+		else if(strcmp(v[0], "text") == 0)
+			cmap[Ctext] = strtoul(v[1], nil, 16)<<8 | 0xff;
+		else if(strcmp(v[0], "htext") == 0)
+			cmap[Chtext] = strtoul(v[1], nil, 16)<<8 | 0xff;
+		else if(strcmp(v[0], "high") == 0)
+			cmap[Chigh] = strtoul(v[1], nil, 16)<<8 | 0xff;
+		else if(strcmp(v[0], "title") == 0)
+			cmap[Ctitle] = strtoul(v[1], nil, 16)<<8 | 0xff;
+		else if(strcmp(v[0], "ltitle") == 0)
+			cmap[Cltitle] = strtoul(v[1], nil, 16)<<8 | 0xff;
+		else if(strcmp(v[0], "hold") == 0)
+			cmap[Chold] = strtoul(v[1], nil, 16)<<8 | 0xff;	
+		else if(strcmp(v[0], "lhold") == 0)
+			cmap[Clhold] = strtoul(v[1], nil, 16)<<8 | 0xff;
+		else if(strcmp(v[0], "palehold") == 0)
+			cmap[Cpalehold] = strtoul(v[1], nil, 16)<<8 | 0xff;
+		else if(strcmp(v[0], "paletext") == 0)
+			cmap[Cpaletext] = strtoul(v[1], nil, 16)<<8 | 0xff;	
+		else if(strcmp(v[0], "size") == 0)
+			cmap[Csize] = strtoul(v[1], nil, 16)<<8 | 0xff;	
+	}
+	Bterm(bf);
+}
+
 void
 iconinit(void)
 {
-	background = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x777777FF);
+	int i;
 
-	/* greys are multiples of 0x11111100+0xFF, 14* being palest */
-	cols[BACK] = allocimage(display, Rect(0,0,1,1), CMAP8, 1, 0xFFFFFFFF^reverse);
-	cols[BORD] = allocimage(display, Rect(0,0,1,1), CMAP8, 1, 0x999999FF^reverse);
-	cols[TEXT] = allocimage(display, Rect(0,0,1,1), CMAP8, 1, 0x000000FF^reverse);
-	cols[HTEXT] = allocimage(display, Rect(0,0,1,1), CMAP8, 1, 0x000000FF);
-	if(!reverse) {
-		cols[HIGH] = allocimage(display, Rect(0,0,1,1), CMAP8, 1, 0xCCCCCCFF);
-		titlecol = allocimage(display, Rect(0,0,1,1), CMAP8, 1, DGreygreen);
-		lighttitlecol = allocimage(display, Rect(0,0,1,1), CMAP8, 1, DPalegreygreen);
-	} else {
-		cols[HIGH] = allocimage(display, Rect(0,0,1,1), CMAP8, 1, DPurpleblue);
-		titlecol = allocimage(display, Rect(0,0,1,1), CMAP8, 1, DPurpleblue);
-		lighttitlecol = allocimage(display, Rect(0,0,1,1), CMAP8, 1, 0x222222FF);
-	}
-	dholdcol = allocimage(display, Rect(0,0,1,1), CMAP8, 1, DMedblue);
-	lightholdcol = allocimage(display, Rect(0,0,1,1), CMAP8, 1, DGreyblue);
-	paleholdcol = allocimage(display, Rect(0,0,1,1), CMAP8, 1, DPalegreyblue);
-	paletextcol = allocimage(display, Rect(0,0,1,1), CMAP8, 1, 0x666666FF^reverse);
-	sizecol = allocimage(display, Rect(0,0,1,1), CMAP8, 1, DRed);
-
-	if(reverse == 0)
-		holdcol = dholdcol;
-	else
-		holdcol = paleholdcol;
+	u32int cmap[nelem(cols)] = {
+		[Crioback] DBlack,
+		[Cback] DBlack,
+		[Cbord] 0x111111FF,
+		[Ctext] DWhite,
+		[Chtext] DBlack,
+		[Chigh] 0x8F8F8FFF,
+		[Ctitle] 0xE4E4E4FF,
+		[Cltitle] 0x2C2C2CFF,
+		[Chold] 0xFFAD00FF,
+		[Clhold] 0xDCBC72FF,
+		[Cpalehold] 0xCCBD9EFF,
+		[Cpaletext] 0x5C5D5DFF,
+		[Csize] 0xFEBA00FF,
+	};
+	snarftheme(cmap);
+	for(i=0; i<nelem(cols); i++)
+		if((cols[i] = allocimage(display, Rect(0,0,1,1),
+		screen->chan, 1, cmap[i])) == nil)
+			sysfatal("allocimage: %r");
 }

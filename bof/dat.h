@@ -296,17 +296,23 @@ Cursor	whitearrow;
 Cursor	query;
 Cursor	*corners[9];
 
-Image	*background;
-Image	*cols[NCOL];
-Image	*titlecol;
-Image	*lighttitlecol;
-Image	*dholdcol;
-Image	*holdcol;
-Image	*lightholdcol;
-Image	*paleholdcol;
-Image	*paletextcol;
-Image	*sizecol;
-int	reverse;	/* there are no pastel paints in the dungeons and dragons world -- rob pike */
+enum {
+	Crioback,
+	Cback,
+	Cbord,
+	Ctext,
+	Chtext,
+	Chigh,
+	Ctitle,
+	Cltitle,
+	Chold,
+	Clhold,
+	Cpalehold,
+	Cpaletext,
+	Csize,
+	NCOLS,
+};
+Image	*cols[NCOLS];
 
 Window	**window;
 Window	*wkeyboard;	/* window of simulated keyboard */

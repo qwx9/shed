@@ -299,14 +299,14 @@ wborder(Window *w, int type)
 		return;
 	if(w->holding){
 		if(type == Selborder)
-			col = holdcol;
+			col = cols[Chold];
 		else
-			col = paleholdcol;
+			col = cols[Cpalehold];
 	}else{
 		if(type == Selborder)
-			col = titlecol;
+			col = cols[Ctitle];
 		else
-			col = lighttitlecol;
+			col = cols[Cltitle];
 	}
 	border(w->i, w->i->r, Selborder, col, ZP);
 }
@@ -316,14 +316,14 @@ wsetcols(Window *w, int topped)
 {
 	if(w->holding)
 		if(topped)
-			w->cols[TEXT] = holdcol;
+			w->cols[TEXT] = cols[Chold];
 		else
-			w->cols[TEXT] = lightholdcol;
+			w->cols[TEXT] = cols[Clhold];
 	else
 		if(topped)
-			w->cols[TEXT] = cols[TEXT];
+			w->cols[TEXT] = cols[Ctext];
 		else
-			w->cols[TEXT] = paletextcol;
+			w->cols[TEXT] = cols[Cpaletext];
 }
 
 void

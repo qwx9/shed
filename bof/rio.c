@@ -129,9 +129,6 @@ threadmain(int argc, char *argv[])
 	kbdin = nil;
 	maxtab = 0;
 	ARGBEGIN{
-	case 'b':
-		reverse = ~0xFF;
-		break;
 	case 'f':
 		fontname = EARGF(usage());
 		break;
@@ -196,10 +193,10 @@ threadmain(int argc, char *argv[])
 	kbdchan = initkbd();
 	if(kbdchan == nil)
 		error("can't find keyboard");
-	wscreen = allocscreen(screen, background, 0);
+	wscreen = allocscreen(screen, cols[Crioback], 0);
 	if(wscreen == nil)
 		error("can't allocate screen");
-	draw(view, viewr, background, nil, ZP);
+	draw(view, viewr, cols[Crioback], nil, ZP);
 	flushimage(display, 1);
 
 	timerinit();
@@ -598,10 +595,10 @@ resized(void)
 	freescrtemps();
 	view = screen;
 	freescreen(wscreen);
-	wscreen = allocscreen(screen, background, 0);
+	wscreen = allocscreen(screen, cols[Crioback], 0);
 	if(wscreen == nil)
 		error("can't re-allocate screen");
-	draw(view, view->r, background, nil, ZP);
+	draw(view, view->r, cols[Crioback], nil, ZP);
 	o = subpt(viewr.max, viewr.min);
 	n = subpt(view->clipr.max, view->clipr.min);
 	qsort(window, nwindow, sizeof(window[0]), wtopcmp);
@@ -831,7 +828,7 @@ sweep(void)
 				if(i == nil)
 					goto Rescue;
 				oi = i;
-				border(i, r, Selborder, sizecol, ZP);
+				border(i, r, Selborder, cols[Csize], ZP);
 				draw(i, insetrect(r, Selborder), cols[BACK], nil, ZP);
 			}
 		}
@@ -909,11 +906,11 @@ drag(Window *w)
 	dm = subpt(om, w->screenr.min);
 	d = subpt(w->screenr.max, w->screenr.min);
 	op = subpt(om, dm);
-	drawborder(Rect(op.x, op.y, op.x+d.x, op.y+d.y), sizecol);
+	drawborder(Rect(op.x, op.y, op.x+d.x, op.y+d.y), cols[Csize]);
 	while(mouse->buttons==4){
 		p = subpt(mouse->xy, dm);
 		if(!eqpt(p, op)){
-			drawborder(Rect(p.x, p.y, p.x+d.x, p.y+d.y), sizecol);
+			drawborder(Rect(p.x, p.y, p.x+d.x, p.y+d.y), cols[Csize]);
 			op = p;
 		}
 		readmouse(mousectl);
@@ -943,7 +940,7 @@ bandsize(Window *w)
 	or = w->screenr;
 	but = mouse->buttons;
 	startp = onscreen(mouse->xy);
-	drawborder(or, sizecol);
+	drawborder(or, cols[Csize]);
 	while(mouse->buttons == but) {
 		p = onscreen(mouse->xy);
 		which = whichcorner(or, p);
@@ -953,7 +950,7 @@ bandsize(Window *w)
 		}
 		r = whichrect(or, p, owhich);
 		if(!eqrect(r, or) && goodrect(r)){
-			drawborder(r, sizecol);
+			drawborder(r, cols[Csize]);
 			or = r;
 		}
 		readmouse(mousectl);

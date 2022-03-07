@@ -1,4 +1,4 @@
-Experimental bikeshedding.
+# Experimental bikeshedding.
 
 - bof(1): passable rio(1) fork
 - draw(2): supporting bullshit theming
@@ -8,22 +8,21 @@ Consult the commit log for a list of changes.
 
 ## Themes
 
-Yes.
-This is now a system-wide change (because of the new libdraw),
-which affects menu colors.
-Unless a _/dev/theme_ is provided, nothing changes.
-_include/draw.h_ must be bound on top of _/sys/include/draw.h_.
+Yes.  This is now a system-wide change (because of the new libdraw),
+which affects menu colors.  Unless a _/dev/theme_ is provided, nothing
+changes.  _include/draw.h_ must be bound on top of
+_/sys/include/draw.h_.
 
-There is no real theme device maintained by rio(1).
-Instead, use namespaces to bind a directory containing a readable _theme_ file
-on top of _/dev_ in your profile or wrapper scripts and call it a day:
+There is no real theme device maintained by rio(1).  Instead, use
+namespaces to bind a directory containing a readable _theme_ file on
+top of _/dev_ in your profile or wrapper scripts and call it a day:
 
 	; mkdir -p $home/dev
 	; cp $home/lib/theme/dicks $home/dev/theme
 	; bind -a $home/dev /dev
 
-There no longer is support for dynamic changes,
-but programs that use a _/dev/theme_ will still behave as expected.
-Other programs may copypasta the theme snarfing code to use this mechanism as well.
+There no longer is support for dynamic changes, but programs that use
+a _/dev/theme_ will still behave as expected.  Other programs may
+copypasta the theme snarfing code to use this mechanism as well.
 Should you need this, look up [Sigrid's patches](http://ftrv.se/14),
 on which everything is based.

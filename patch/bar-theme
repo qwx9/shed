@@ -1,0 +1,55 @@
+diff 46d9e65b6623956bc7b1f8d982dc986951cb4962 uncommitted
+--- a/bar.c
++++ b/bar.c
+@@ -240,9 +240,7 @@
+ 	Mousectl *mctl;
+ 	uvlong t, oldt;
+ 	int oldbuttons;
+-	char *s, *v[3];
+-	u32int brgb;
+-	Biobuf *b;
++	char *s;
+ 	Rune key;
+ 	Mouse m;
+ 	enum {
+@@ -286,18 +284,6 @@
+ 	if((local = tzload("local")) == nil)
+ 		sysfatal("zone: %r");
+ 
+-	brgb = DPalegreygreen;
+-	if((b = Bopen("/dev/theme", OREAD)) != nil){
+-		while((s = Brdline(b, '\n')) != nil){
+-			s[Blinelen(b)-1] = 0;
+-			if(tokenize(s, v, nelem(v)) > 1 && strcmp(v[0], "ltitle") == 0){
+-				brgb = strtoul(v[1], nil, 16)<<8 | 0xff;
+-				break;
+-			}
+-		}
+-		Bterm(b);
+-	}
+-
+ 	if((wctl = open("/dev/wctl", ORDWR)) < 0)
+ 		sysfatal("%r");
+ 	bat = open("/mnt/acpi/battery", OREAD);
+@@ -311,14 +297,13 @@
+ 	if((kctl = initkeyboard(nil)) == nil)
+ 		sysfatal("initkeyboard: %r");
+ 
+-	cback = allocimage(display, Rect(0,0,1,1), RGB24, 1, brgb);
+-	if(brgb == DPalegreygreen)
+-		brgb = DBlack;
+-	else{ /* dunno, just invert */
+-		brgb = ~(brgb>>8 | brgb>>16 | brgb>>24);
+-		brgb = brgb<<8 | brgb<<16 | brgb<<24 | 0xff;
+-	}
+-	ctext = allocimage(display, Rect(0,0,1,1), RGB24, 1, brgb);
++	Theme th[2] = {
++		{ "back",	DPalegreygreen },
++		{ "text",	DBlack },
++	};
++	readtheme(th, nelem(th), nil);
++	cback = allocimage(display, Rect(0,0,1,1), screen->chan, 1, th[0].c);
++	ctext = allocimage(display, Rect(0,0,1,1), screen->chan, 1, th[1].c);
+ 
+ 	a[Emouse].c = mctl->c;
+ 	a[Eresize].c = mctl->resizec;

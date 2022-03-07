@@ -297,12 +297,11 @@ Cursor	query;
 Cursor	*corners[9];
 
 enum {
-	Crioback,
 	Cback,
+	Chigh,
 	Cbord,
 	Ctext,
 	Chtext,
-	Chigh,
 	Ctitle,
 	Cltitle,
 	Chold,
@@ -310,6 +309,7 @@ enum {
 	Cpalehold,
 	Cpaletext,
 	Csize,
+	Crioback,
 	NCOLS,
 };
 Image	*cols[NCOLS];

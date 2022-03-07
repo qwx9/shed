@@ -24,73 +24,38 @@ void		lldelete(Flayer*);
 Image	*maincols[NCOL];
 Image	*cmdcols[NCOL];
 
-static void
-snarftheme(u32int mcol[NCOL], u32int ccol[NCOL])
-{
-	char p[128], *s, *v[3], *h;
-	Biobuf *bf;
-
-	if((h = getenv("home")) == nil){
-		fprint(2, "snarftheme: %r\n");
-		return;
-	}
-	snprint(p, sizeof p, "%s/lib/theme/jam", h);
-	free(h);
-	if((bf = Bopen(p, OREAD)) == nil){
-		fprint(2, "snarftheme: %r\n");
-		return;
-	}
-	while((s = Brdline(bf, '\n')) != nil){
-		s[Blinelen(bf)-1] = 0;
-		if(tokenize(s, v, nelem(v)) <= 0)
-			continue;
-		if(strcmp(v[0], "rioback") == 0)
-			mcol[BACK] = strtoul(v[1], nil, 16)<<8 | 0xff;
-		else if(strcmp(v[0], "high") == 0)
-			mcol[HIGH] = strtoul(v[1], nil, 16)<<8 | 0xff;
-		else if(strcmp(v[0], "border") == 0)
-			mcol[BORD] = strtoul(v[1], nil, 16)<<8 | 0xff;
-		else if(strcmp(v[0], "text") == 0)
-			mcol[TEXT] = strtoul(v[1], nil, 16)<<8 | 0xff;
-		else if(strcmp(v[0], "back") == 0)
-			mcol[HTEXT] = strtoul(v[1], nil, 16)<<8 | 0xff;
-		else if(strcmp(v[0], "menuback") == 0)
-			ccol[BACK] = strtoul(v[1], nil, 16)<<8 | 0xff;	
-		else if(strcmp(v[0], "menuhigh") == 0)
-			ccol[HIGH] = strtoul(v[1], nil, 16)<<8 | 0xff;	
-		else if(strcmp(v[0], "lhold") == 0)
-			ccol[BORD] = strtoul(v[1], nil, 16)<<8 | 0xff;	
-		else if(strcmp(v[0], "hold") == 0)
-			ccol[TEXT] = strtoul(v[1], nil, 16)<<8 | 0xff;	
-		else if(strcmp(v[0], "menuhtext") == 0)
-			ccol[HTEXT] = strtoul(v[1], nil, 16)<<8 | 0xff;	
-	}
-	Bterm(bf);
-}
-
 void
 flstart(Rectangle r)
 {
 	int i;
-	u32int mcol[NCOL], ccol[NCOL];
 
+	enum{
+		CBACK = HTEXT + 1,
+		CHIGH,
+		CBORD,
+		CTEXT,
+		CHTEXT,
+		Ncols,
+	};
+	Theme th[Ncols] = {
+		[BACK] { "back",	0xFFFFEAFF },
+		[HIGH] { "high",	DDarkyellow },
+		[BORD]	{ "border",	DYellowgreen },
+		[TEXT]	{ "text",	DBlack },
+		[HTEXT]{ "back",	DBlack },
+		[CBACK] { "menuback",	0xEAFFFFFF },
+		[CHIGH] { "menuhigh",	DPalegreen },
+		[CBORD]	{ "lhold",	DPurpleblue },
+		[CTEXT]	{ "hold",	DBlack },
+		[CHTEXT]{ "menuhtext",	DBlack },
+	};
+	readtheme(th, nelem(th), nil);
 	lDrect = r;
-	mcol[BACK] = DBlack;
-	mcol[HIGH] = 0x8F8F8FFF;
-	mcol[BORD] = 0x363636FF;
-	mcol[TEXT] = DWhite;
-	mcol[HTEXT] = DBlack;
-	ccol[BACK] = DBlack;
-	ccol[HIGH] = 0x9C9C9CFF;
-	ccol[BORD] = 0xDCBC72FF;
-	ccol[TEXT] = 0xFFAD00FF;
-	ccol[HTEXT] = DBlack;
-	snarftheme(mcol, ccol);
 	for(i=0; i<NCOL; i++){
 		r = i == BORD ? Rect(0,0,2,2) : Rect(0,0,1,1);
- 		maincols[i] = allocimage(display, r, screen->chan, 1, mcol[i]);
- 		cmdcols[i] = allocimage(display, r, screen->chan, 1, ccol[i]);
- 	}
+ 		maincols[i] = allocimage(display, r, screen->chan, 1, th[i].c);
+ 		cmdcols[i] = allocimage(display, r, screen->chan, 1, th[CBACK+i].c);
+	}
 }
 
 void
@@ -143,12 +108,12 @@ void
 flclose(Flayer *l)
 {
 	if(l->visible == All)
-		draw(screen, l->entire, display->black, nil, ZP);
+		draw(screen, l->entire, maincols[BACK], nil, ZP);
 	else if(l->visible == Some){
 		if(l->f.b == 0)
 			l->f.b = allocimage(display, l->entire, screen->chan, 0, DNofill);
 		if(l->f.b){
-			draw(l->f.b, l->entire, display->black, nil, ZP);
+			draw(l->f.b, l->entire, maincols[BACK], nil, ZP);
 			flrefresh(l, l->entire, 0);
 		}
 	}
@@ -416,7 +381,7 @@ flresize(Rectangle dr)
 	if(0 && Dx(dr)==Dx(olDrect) && Dy(dr)==Dy(olDrect))
 		move = 1;
 	else
-		draw(screen, lDrect, display->black, nil, ZP);
+		draw(screen, lDrect, maincols[BACK], nil, ZP);
 	for(i=0; i<nllist; i++){
 		l = llist[i];
 		l->lastsr = ZR;

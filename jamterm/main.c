@@ -46,7 +46,6 @@ threadmain(int argc, char *argv[])
 	r.max.y = r.min.y+Dy(r)/5;
 	if(Dy(r) < font->height)
 		r.max.y = r.min.y + font->height + 2*FLMARGIN;
-	flstart(screen->clipr);
 	rinit(&cmd.rasp);
 	flnew(&cmd.l[0], gettext, 1, &cmd);
 	flinit(&cmd.l[0], r, font, cmdcols);

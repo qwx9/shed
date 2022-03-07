@@ -43,10 +43,7 @@ Cursor lockarrow={
 	 0x38, 0x00, 0x70, 0x00, 0xE0, 0xDB, 0xC0, 0xDB,}
 };
 
-Image	*darkgrey;
-
 void
 iconinit(void)
 {
-	darkgrey = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, 0x444444FF);
 }

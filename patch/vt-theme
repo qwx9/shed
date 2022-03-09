@@ -1,0 +1,63 @@
+diff af6f03e52829a571f1fa3d61c0bfa09a1c89ea36 uncommitted
+--- a/sys/src/cmd/vt/main.c
++++ b/sys/src/cmd/vt/main.c
+@@ -253,13 +253,13 @@
+ threadmain(int argc, char **argv)
+ {
+ 	int rflag;
+-	int i, blkbg;
++	int i, reverse;
+ 	char *fontname, *p;
+ 
+ 	fontname = nil;
+ 	fk = ansifk;
+ 	term = "vt100";
+-	blkbg = 0;
++	reverse = 0;
+ 	rflag = 0;
+ 	attr = defattr;
+ 	ARGBEGIN{
+@@ -271,7 +271,7 @@
+ 		term = "ansi";
+ 		break;
+ 	case 'b':
+-		blkbg = 1;		/* e.g., for linux colored output */
++		reverse = ~0xFF;		/* e.g., for linux colored output */
+ 		break;
+ 	case 'c':
+ 		nocolor = 1;
+@@ -334,10 +334,30 @@
+ 		hicolors[i] = allocimage(display, Rect(0,0,1,1), screen->chan, 1,
+ 			rgbahicolors[i]);
+ 	}
+-	bgcolor = (blkbg? display->black: display->white);
+-	fgcolor = (blkbg? display->white: display->black);
+-	bgselected = allocimage(display, Rect(0,0,1,1), CMAP8, 1, blkbg ? 0x333333FF : 0xCCCCCCFF);
+-	fgselected = allocimage(display, Rect(0,0,1,1), CMAP8, 1, blkbg ? 0xCCCCCCFF : 0x333333FF);
++
++	enum{
++		BACK,
++		HIGH,
++		BORD,
++		TEXT,
++		HTEXT,
++		Ncols,
++	};
++	Theme th[Ncols] = {
++		[BACK]	{ "back",	DBlack },
++		[TEXT]	{ "text",	DWhite },
++		[HIGH]	{ "high",	0xCCCCCCFF },
++		[HTEXT]	{ "back",	0x333333FF },
++	};
++	readtheme(th, nelem(th), nil);
++	if(reverse)
++		for(i=0; i<nelem(th); i++)
++			th[i].c ^= reverse;
++	bgcolor = allocimage(display, Rect(0,0,1,1), screen->chan, 1, th[BACK].c);
++	fgcolor = allocimage(display, Rect(0,0,1,1), screen->chan, 1, th[TEXT].c);
++	bgselected = allocimage(display, Rect(0,0,1,1), screen->chan, 1, th[HIGH].c);
++	fgselected = allocimage(display, Rect(0,0,1,1), screen->chan, 1, th[HTEXT].c);
++
+ 	resized();
+ 
+ 	pidchan = chancreate(sizeof(int), 0);

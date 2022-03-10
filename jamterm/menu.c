@@ -177,7 +177,8 @@ menu3hit(void)
 					if(++i==NL)
 						i = 0;
 				while(i!=t->front && t->l[i].textfn==0);
-			current(&t->l[i], 1);
+			if(&t->l[i] != which)
+				current(&t->l[i], 1, 1);
 		}else if(!hostlock)
 			sweeptext(0, tag[m-NMENU3]);
 		break;
@@ -199,7 +200,7 @@ sweeptext(int new, int tag)
 		r = defaultrect();
 	if(Dx(r) < 2*FLMARGIN || Dy(r) < 2*FLMARGIN)
 		r = cmd.l[cmd.front].entire;
-	current((Flayer *)0, 0);
+	current((Flayer *)0, 0, 0);
 	flnew(&t->l[0], gettext, 0, (char *)t);
 	flinit(&t->l[0], r, font, maincols);	/*bnl*/
 	t->nwin = 1;
@@ -210,29 +211,6 @@ sweeptext(int new, int tag)
 		rinit(&t->rasp);
 		t->tag = tag;
 		startfile(t);
-	}
-	return t;
-}
-
-Text *
-filecycle(Text *t)
-{
-	int i;
-	Text *t´;
-
-	if(t == nil)
-		t = &cmd;
-	for(i=0; text[i]!=t; i++)
-		if(i == nname)
-			abort();
-	for(i=(i+1)%nname; text[i]!=t; i=(i+1)%nname){
-		t´ = text[i];
-		if(t´ == nil || t´ == &cmd)
-			continue;
-		if(t´->nwin != 0 && t´->l[t´->front].textfn != nil){
-			t = t´;
-			break;
-		}
 	}
 	return t;
 }

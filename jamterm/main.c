@@ -17,6 +17,7 @@ long	nscralloc;
 Cursor	*cursor;
 Flayer	*which = 0;
 Flayer	*work = 0;
+Flayer	flru;
 long	snarflen;
 long	typestart = -1;
 long	typeend = -1;
@@ -40,6 +41,8 @@ threadmain(int argc, char *argv[])
 	getscreen(argc, argv);
 	iconinit();
 	initio();
+	flru.lprev = &flru;
+	flru.lnext = &flru;
 	scratch = alloc(100*RUNESIZE);
 	nscralloc = 100;
 	r = screen->r;
@@ -66,7 +69,7 @@ threadmain(int argc, char *argv[])
 		if(got&(1<<RPlumb)){
 			for(i=0; cmd.l[i].textfn==0; i++)
 				;
-			current(&cmd.l[i], 0);
+			current(&cmd.l[i], 0, 1);
 			flsetselect(which, cmd.rasp.nrunes, cmd.rasp.nrunes);
 			type(which, RPlumb);
 		}
@@ -82,7 +85,7 @@ threadmain(int argc, char *argv[])
 			}
 			nwhich = flwhich(mousep->xy);
 			if(nwhich && nwhich!=which)
-				current(nwhich, 1);
+				current(nwhich, 1, 1);
 			scr = which && (ptinrect(mousep->xy, which->scroll) ||
 				mousep->buttons&(8|16));
 			if(mousep->buttons)
@@ -107,7 +110,7 @@ threadmain(int argc, char *argv[])
 				if(scr)
 					scroll(which, (mousep->buttons&8) ? 4 : 1);
 				else if(nwhich && nwhich!=which)
-					current(nwhich, 1);
+					current(nwhich, 1, 1);
 				else{
 					t=(Text *)which->user1;
 					nclick = flselect(which, &p);
@@ -150,6 +153,27 @@ resize(void)
 			hcheck(text[i]->tag);
 }
 
+static void
+flunlink(Flayer *fl)
+{
+	if(fl->lnext == nil || fl->lnext == fl)
+		return;
+	fl->lnext->lprev = fl->lprev;
+	fl->lprev->lnext = fl->lnext;
+	fl->lnext = nil;
+	fl->lprev = nil;
+}
+
+static void
+fllinkhead(Flayer *fl)
+{
+	flunlink(fl);
+	fl->lnext = flru.lnext;
+	fl->lprev = &flru;
+	fl->lnext->lprev = fl;
+	fl->lprev->lnext = fl;
+}
+
 void
 warpmouse(Flayer *l)
 {
@@ -166,7 +190,7 @@ warpmouse(Flayer *l)
 }
 
 void
-current(Flayer *nw, int warp)
+current(Flayer *nw, int warp, int up)
 {
 	Text *t;
 
@@ -182,8 +206,11 @@ current(Flayer *nw, int warp)
 		//buttons(Up);
 		t = (Text *)nw->user1;
 		t->front = nw-&t->l[0];
-		if(t != &cmd)
+		if(t != &cmd){
 			work = nw;
+			if(up)
+				fllinkhead(nw);
+		}
 		if(warp)
 			warpmouse(nw);
 	}
@@ -199,12 +226,13 @@ closeup(Flayer *l)
 	m = whichmenu(t->tag);
 	if(m < 0)
 		return;
+	flunlink(l);
 	flclose(l);
 	if(l == which){
 		which = nil;
 		for(i=0; cmd.l[i].textfn==0; i++)
 			;
-		current(&cmd.l[i], 1);
+		current(&cmd.l[i], 1, 1);
 	}
 	if(l == work)
 		work = 0;
@@ -249,11 +277,12 @@ duplicate(Flayer *l, Rectangle r, Font *f, int close)
 		flsetselect(nl, l->p0, l->p1);
 		if(close){
 			flclose(l);
+			flunlink(l);
 			if(l==which)
 				which = 0;
 		}else
 			t->nwin++;
-		current(nl, 0);
+		current(nl, 0, 1);
 		hcheck(t->tag);
 	}
 	setcursor(mousectl, cursor);
@@ -719,24 +748,28 @@ type(Flayer *l, int res)	/* what a bloody mess this is */
 		t = &cmd;
 		for(l=t->l; l->textfn==0; l++)
 			;
-		current(l, 1);
+		current(l, 1, 1);
 		flushtyping(0);
 		a = t->rasp.nrunes;
 		flsetselect(l, a, a);
 		center(l, a);
  	}else if(c == Kbel){
+ 		int up = 1;
 		t = &cmd;
 		if(work != nil){
 			if(which != work){
-				current(work, 1);
+				current(work, 1, up);
 				return;
 			}
 	 		t = (Text*)work->user1;
 			l = &t->l[t->front];
 		}
 		if(t == &cmd || t->nwin == 1 && nname > 1){
-			t = filecycle(t);
-			l = &t->l[t->front];
+			if(flru.lnext == &flru)
+				return;
+			for(l=work!=nil?work->lnext:flru.lnext; l==&flru; l=l->lnext)
+				;
+			up = 0;
 		}else{
 	 		for(int i=t->front; (i = (i+1)%NL) != t->front; )
 	 			if(t->l[i].textfn != 0){
@@ -744,7 +777,7 @@ type(Flayer *l, int res)	/* what a bloody mess this is */
 	 				break;
 	 			}
 		}
-		current(l, 1);
+		current(l, 1, up);
 	}else{
 		if(c==Kesc && typeesc>=0){
 			l->p0 = typeesc;

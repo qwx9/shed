@@ -24,6 +24,9 @@ struct Flayer
 	Rectangle	scroll;
 	Rectangle	lastsr;	/* geometry of scrollbar when last drawn */
 	Vis		visible;
+
+	Flayer *lprev;
+	Flayer *lnext;
 };
 
 void	flborder(Flayer*, int);

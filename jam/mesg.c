@@ -532,9 +532,16 @@ inmesg(Tmesg type)
 		pm->dst = 0;
 		/* construct current directory */
 		c = Strtoc(&f->name);
-		if(c[0] == '/')
+		if(strcmp(c, "/tmp/jam.err") == 0){
+			pm->wdir = emalloc(1024);
+			getwd(pm->wdir, 1024);
+			cleanname(pm->wdir);
+			free(c);
+		}else if(c[0] == '/'){
 			pm->wdir = c;
-		else{
+			if((c = strrchr(pm->wdir, '/')) != nil)
+				*c = '\0';
+		}else{
 			wdir = emalloc(1024);
 			getwd(wdir, 1024);
 			pm->wdir = emalloc(1024);
@@ -542,10 +549,9 @@ inmesg(Tmesg type)
 			cleanname(pm->wdir);
 			free(wdir);
 			free(c);
+			if((c = strrchr(pm->wdir, '/')) != nil)
+				*c = '\0';
 		}
-		c = strrchr(pm->wdir, '/');
-		if(c)
-			*c = '\0';
 		pm->type = strdup("text");
 		if(p1 > p0)
 			pm->attr = nil;

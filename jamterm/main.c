@@ -318,9 +318,11 @@ buttons(int updown)
 Rectangle
 inflatepoint(Point p)
 {
+	Rectangle *c;
 	Rectangle r;
 	
 	r = screen->r;
+	c = &cmd.l[cmd.front].entire;
 	// L
 	if(p.x < c->min.x)
 		r.max.x = c->min.x;

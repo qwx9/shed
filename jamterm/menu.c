@@ -115,7 +115,7 @@ menu2hit(void)
 		break;
 
 	case Search:
-		if(menu2str[Search] == nil)
+		if(menu2str[Search] == nil && t != &cmd)
 			break;
 		outcmd();
 		if(t==&cmd)

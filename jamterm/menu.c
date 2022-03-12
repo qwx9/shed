@@ -127,7 +127,8 @@ menu2hit(void)
 
 	case Addcmd:
 		memset(sbuf, 0, sizeof sbuf);
-		if(enter(nil, sbuf, sizeof sbuf, mousectl, keyboardctl, nil) < 0)
+		if(enter(nil, sbuf, sizeof sbuf, mousectl, keyboardctl, nil) < 0
+		|| strlen(sbuf) == 0)
 			break;
 		if((cmds = realloc(cmds, (ncmd+1) * sizeof cmds)) == nil)
 			panic("realloc");

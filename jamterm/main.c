@@ -318,13 +318,9 @@ buttons(int updown)
 Rectangle
 inflatepoint(Point p)
 {
-	Rectangle *c;
 	Rectangle r;
 	
 	r = screen->r;
-	c = &cmd.l[cmd.front].entire;
-	if(ptinrect(p, *c))
-		return r;
 	// L
 	if(p.x < c->min.x)
 		r.max.x = c->min.x;
@@ -345,27 +341,6 @@ inflatepoint(Point p)
 	return r;
 }
 
-Rectangle
-defaultrect(void)
-{
-	int fw;
-	Rectangle *c;
-	Rectangle L, M, R;
-
-	c = &cmd.l[cmd.front].entire;
-	R = inflatepoint(Pt(c->max.x + 1, c->min.y));
-	L = inflatepoint(Pt(c->min.x - 1, c->min.y));
-	M = inflatepoint(Pt(c->min.x, c->max.y));
-	fw = stringwidth(font, "0");
-	if(Dx(R) >= 16 * fw && Dy(R) >= font->height && !rectinrect(R, *c))
-		return R;
-	else if(Dx(L) >= 16 * fw && Dy(L) >= font->height && !rectinrect(L, *c))
-		return L;
-	else if(Dx(M) >= 16 * fw && Dy(M) >= font->height && !rectinrect(M, *c))
-		return M;
-	return screen->r;
-}
-
 int
 promptrect(Rectangle *r)
 {
@@ -375,7 +350,7 @@ promptrect(Rectangle *r)
 	if(Dx(*r) < 8*font->width && Dy(*r) < 2*font->height)
 		*r = stealrect(r->min);
 	if(rectclip(r, screen->r) == 0)
-		*r = defaultrect();
+		*r = stealrect(mousep->xy);
 	if(Dx(*r) < 2*FLMARGIN || Dy(*r) < 2*FLMARGIN)
 		*r = cmd.l[cmd.front].entire;
 	return 1;

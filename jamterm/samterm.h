@@ -164,7 +164,6 @@ void	dumperrmsg(int, int, int, int);
 int	screensize(int*,int*);
 void	getmouse(void);
 Rectangle inflatepoint(Point);
-Rectangle	defaultrect(void);
 int	promptrect(Rectangle*);
 
 #include "mesg.h"

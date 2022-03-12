@@ -193,7 +193,7 @@ stealrect(Point p)
 	Flayer *fl;
 	Text *t;
 
-	for(i=0, r=nil; i<nname; i++){
+	for(i=1, r=nil; i<nname; i++){
 		t = text[i];
 		if(t == nil || t->nwin == 0)
 			continue;
@@ -218,10 +218,7 @@ sweeptext(int new, int tag)
 
 	if((t = mallocz(sizeof(*t), 1)) == nil)
 		return nil;
-	if(new)
-		r = stealrect(mousep->xy);
-	else
-		r = defaultrect();
+	r = stealrect(mousep->xy);
 	if(Dx(r) < 2*FLMARGIN || Dy(r) < 2*FLMARGIN)
 		r = cmd.l[cmd.front].entire;
 	current((Flayer *)0, 0, 0);

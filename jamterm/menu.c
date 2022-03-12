@@ -28,7 +28,7 @@ enum Menu2
 	Plumb,
 	Look,
 	Search,
-	Wtf,
+	Addcmd,
 	NMENU2,
 	Send = Search,
 	NMENU2C,
@@ -50,9 +50,12 @@ char	*menu2str[] = {
 	"snarf",
 	"plumb",
 	"look",
-	0,		/* storage for last pattern */
-	"lul",
+	nil,		/* storage for last pattern */
+	"add cmd",
 };
+
+int	ncmd;
+char	**cmds;
 
 char	*menu3str[] = {
 	"new",
@@ -71,7 +74,7 @@ extern int kekfd[2];
 void
 menu2hit(void)
 {
-	char s[64];
+	char sbuf[256];
 	Text *t=(Text *)which->user1;
 	int w = which-t->l;
 	int m;
@@ -121,12 +124,24 @@ menu2hit(void)
 			outT0(Tsearch);
 		setlock();
 		break;
-	case Wtf:
-		/*
-		memset(s, 0, sizeof s);
-		snprint(s, sizeof s, ",d\n");
-		write(kekfd[1], s, strlen(s)+1);
-		*
+
+	case Addcmd:
+		memset(sbuf, 0, sizeof sbuf);
+		if(enter(nil, sbuf, sizeof sbuf, mousectl, keyboardctl, nil) < 0)
+			break;
+		if((cmds = realloc(cmds, (ncmd+1) * sizeof cmds)) == nil)
+			panic("realloc");
+		cmds[ncmd++] = strdup(sbuf);
+		break;
+
+	default:
+		m -= NMENU2;
+		if(m < 0 || m >= ncmd)
+			break;
+		memset(sbuf, 0, sizeof sbuf);
+		w = snprint(sbuf, sizeof sbuf, "%s\n", cmds[m]);
+		if(write(kekfd[1], sbuf, w + 1) != w + 1)
+			fprint(2, "jamterm: %r\n");
 		break;
 	}
 }
@@ -331,10 +346,12 @@ genmenu2(int n)
 	Text *t=(Text *)which->user1;
 	char *p;
 	
-	if(n>=NMENU2)
+	if(n >= NMENU2 + ncmd)
 		return 0;
 	if(n == Search && menu2str[n] == nil)
 		p = "(search)";
+	else if(n >= NMENU2)
+		p = cmds[n-NMENU2];
 	else
 		p = menu2str[n];
 	if(!hostlock && !t->lock || n==Search || n==Look)
@@ -348,7 +365,7 @@ genmenu2c(int n)
 	char *p;
 	if(n >= NMENU2C)
 		return 0;
-	if(n == Send)
+	else if(n == Send)
 		p="send";
 	else
 		p = menu2str[n];

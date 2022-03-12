@@ -37,10 +37,10 @@ defaultcmdrect(void)
 
 	rw = 2 * Dx(screen->r) / 12;
 	fw = stringwidth(font, "0");
-	if(rw > 100 * fw)
-		rw = 100 * fw;
-	else if(rw < 8 * fw)
+	if(rw < 20 * fw)
 		rw = Dx(screen->r);
+	else if(rw > 100 * fw)
+		rw = 100 * fw;
 	r.min.x = screen->r.max.x - Dx(screen->r) / 2 - rw / 2;
 	r.max.x = r.min.x + rw;
 	r.min.y = screen->r.min.y;

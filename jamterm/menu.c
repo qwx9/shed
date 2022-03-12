@@ -185,6 +185,30 @@ menu3hit(void)
 	}
 }
 
+Rectangle
+stealrect(Point p)
+{
+	int i;
+	Rectangle *c, *r;
+	Flayer *fl;
+	Text *t;
+
+	for(i=0, r=nil; i<nname; i++){
+		t = text[i];
+		if(t == nil || t->nwin == 0)
+			continue;
+		fl = t->l + t->front;
+		c = &fl->entire;
+		if(fl->textfn == nil || fl->visible == None || !ptinrect(p, *c))
+			continue;
+		if(fl->visible == All)
+			return *c;
+		/* hit-or-miss */
+		if(r == nil || Dx(*c) < Dx(*r) || Dy(*c) < Dy(*r))
+			r = c;
+	}
+	return r != nil ? *r : inflatepoint(mousep->xy);
+}
 
 Text *
 sweeptext(int new, int tag)
@@ -195,7 +219,7 @@ sweeptext(int new, int tag)
 	if((t = mallocz(sizeof(*t), 1)) == nil)
 		return nil;
 	if(new)
-		r = inflatepoint(mousep->xy);
+		r = stealrect(mousep->xy);
 	else
 		r = defaultrect();
 	if(Dx(r) < 2*FLMARGIN || Dy(r) < 2*FLMARGIN)

@@ -144,6 +144,7 @@ int	hdatarune(int, long, Rune*, int);
 Rune	*rload(Rasp*, ulong, ulong, ulong*);
 void	menuins(int, uchar*, Text*, int, int);
 void	menudel(int);
+Rectangle	stealrect(Point);
 Text	*sweeptext(int, int);
 void	setpat(char*);
 void	scrdraw(Flayer*, long tot);

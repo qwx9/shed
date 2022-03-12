@@ -29,6 +29,29 @@ int	maxtab = 8;
 int	autoindent;
 int	spacesindent;
 
+static Rectangle
+defaultcmdrect(void)
+{
+	int rw, fw;
+	Rectangle r;
+
+	rw = 2 * Dx(screen->r) / 12;
+	fw = stringwidth(font, "0");
+	if(rw > 100 * fw)
+		rw = 100 * fw;
+	else if(rw < 8 * fw)
+		rw = Dx(screen->r);
+	r.min.x = screen->r.max.x - Dx(screen->r) / 2 - rw / 2;
+	r.max.x = r.min.x + rw;
+	r.min.y = screen->r.min.y;
+	r.max.y = r.min.y + Dy(screen->r) / 3;
+	if(Dy(r) > 16 * font->height)
+		r.max.y = r.min.y + 16 * font->height;
+	else if(Dy(r) < font->height + 2*FLMARGIN)
+		r.max.y = r.min.y + font->height + 2*FLMARGIN;
+	return r;
+}
+
 void
 threadmain(int argc, char *argv[])
 {
@@ -45,10 +68,7 @@ threadmain(int argc, char *argv[])
 	flru.lnext = &flru;
 	scratch = alloc(100*RUNESIZE);
 	nscralloc = 100;
-	r = screen->r;
-	r.max.y = r.min.y+Dy(r)/5;
-	if(Dy(r) < font->height)
-		r.max.y = r.min.y + font->height + 2*FLMARGIN;
+	r = defaultcmdrect();
 	rinit(&cmd.rasp);
 	flnew(&cmd.l[0], gettext, 1, &cmd);
 	flinit(&cmd.l[0], r, font, cmdcols);
@@ -328,28 +348,32 @@ inflatepoint(Point p)
 Rectangle
 defaultrect(void)
 {
+	int fw;
 	Rectangle *c;
 	Rectangle L, M, R;
 
 	c = &cmd.l[cmd.front].entire;
+	R = inflatepoint(Pt(c->max.x + 1, c->min.y));
 	L = inflatepoint(Pt(c->min.x - 1, c->min.y));
 	M = inflatepoint(Pt(c->min.x, c->max.y));
-	R = inflatepoint(Pt(c->max.x + 1, c->min.y));
-	if(Dx(L) >= Dx(M) && Dx(L) >= Dx(R))
+	fw = stringwidth(font, "0");
+	if(Dx(R) >= 16 * fw && Dy(R) >= font->height && !rectinrect(R, *c))
+		return R;
+	else if(Dx(L) >= 16 * fw && Dy(L) >= font->height && !rectinrect(L, *c))
 		return L;
-	else if(Dx(M) > Dx(L) && Dx(M) > Dx(R))
+	else if(Dx(M) >= 16 * fw && Dy(M) >= font->height && !rectinrect(M, *c))
 		return M;
-	return R;
+	return screen->r;
 }
 
 int
 promptrect(Rectangle *r)
 {
 	*r = getrect(3, mousectl);
-	if(eqrect(*r, Rect(0,0,0,0)))
+	if(eqrect(*r, ZR))
 		return 0;
 	if(Dx(*r) < 8*font->width && Dy(*r) < 2*font->height)
-		*r = inflatepoint(r->min);
+		*r = stealrect(r->min);
 	if(rectclip(r, screen->r) == 0)
 		*r = defaultrect();
 	if(Dx(*r) < 2*FLMARGIN || Dy(*r) < 2*FLMARGIN)

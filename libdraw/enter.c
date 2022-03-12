@@ -9,7 +9,7 @@ int
 enter(char *ask, char *buf, int len, Mousectl *mc, Keyboardctl *kc, Screen *scr)
 {
 	int done, down, tick, n, h, w, l, i;
-	Image *b, *save, *backcol, *bordcol;
+	Image *b, *save, *backcol, *bordcol, *txtcol;
 	Point p, o, t;
 	Rectangle r, sc;
 	Alt a[3];
@@ -17,9 +17,23 @@ enter(char *ask, char *buf, int len, Mousectl *mc, Keyboardctl *kc, Screen *scr)
 	Rune k;
 
 	o = screen->r.min;
-	backcol = allocimagemix(display, DPurpleblue, DWhite);
-	bordcol = allocimage(display, Rect(0,0,1,1), screen->chan, 1, DPurpleblue);
-	if(backcol == nil || bordcol == nil)
+
+	enum{
+		Cback,
+		Cbord,
+		Ctext,
+		Ncols,
+	};
+	Theme th[Ncols] = {
+		[Cback] { "menuback",	0xEAFFEAFF },
+		[Cbord]	{ "menubord",	DMedgreen },
+		[Ctext]	{ "menutext",	DBlack },
+	};
+	readtheme(th, nelem(th), nil);
+	backcol = allocimage(display, Rect(0,0,1,1), screen->chan, 1, th[Cback].c);
+	bordcol = allocimage(display, Rect(0,0,1,1), screen->chan, 1, th[Cbord].c);
+	txtcol = allocimage(display, Rect(0,0,1,1), screen->chan, 1, th[Ctext].c);
+	if(backcol == nil || bordcol == nil || txtcol == nil)
 		return -1;
 
 	sc = screen->clipr;
@@ -112,11 +126,11 @@ enter(char *ask, char *buf, int len, Mousectl *mc, Keyboardctl *kc, Screen *scr)
 		}
 		if(buf){
 			t = p;
-			p = stringn(b, p, display->black, ZP, font, buf, utfnlen(buf, tick));
-			draw(b, Rect(p.x-1, p.y, p.x+2, p.y+3), display->black, nil, ZP);
-			draw(b, Rect(p.x, p.y, p.x+1, p.y+h), display->black, nil, ZP);
-			draw(b, Rect(p.x-1, p.y+h-3, p.x+2, p.y+h), display->black, nil, ZP);
-			p = string(b, p, display->black, ZP, font, buf+tick);
+			p = stringn(b, p, txtcol, ZP, font, buf, utfnlen(buf, tick));
+			draw(b, Rect(p.x-1, p.y, p.x+2, p.y+3), txtcol, nil, ZP);
+			draw(b, Rect(p.x, p.y, p.x+1, p.y+h), txtcol, nil, ZP);
+			draw(b, Rect(p.x-1, p.y+h-3, p.x+2, p.y+h), txtcol, nil, ZP);
+			p = string(b, p, txtcol, ZP, font, buf+tick);
 		}
 		flushimage(display, 1);
 

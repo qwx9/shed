@@ -121,23 +121,22 @@ removeextern(void)
 }
 
 Readbuf	hostbuf[2];
-Readbuf	plumbbuf[2];
+Readbuf	plumbbuf[4];
+
+int kekfd[2];
 
 void
-extproc(void *argv)
+extproc(void *chan)
 {
 	Channel *c;
-	int i, n, which, *fdp;
-	void **arg;
+	int i, n, which;
 
-	arg = argv;
-	c = arg[0];
-	fdp = arg[1];
-
-	i = 0;
+	c = chan;
+	close(kekfd[1]);
+	i = 3;
 	for(;;){
-		i = 1-i;	/* toggle */
-		n = read(*fdp, plumbbuf[i].data, sizeof plumbbuf[i].data);
+		i = i == 2 ? 3 : 2;	/* toggle */
+		n = read(kekfd[0], plumbbuf[i].data, sizeof plumbbuf[i].data);
 		if(n <= 0){
 			fprint(2, "jamterm: extern read error: %r\n");
 			threadexits("extern");	/* not a fatal error */
@@ -237,6 +236,10 @@ plumbstart(void)
 	arg[0] =plumbc;
 	arg[1] = &fd;
 	proccreate(plumbproc, arg, STACK);
+	if(pipe(kekfd) < 0)
+		return 1;
+	procrfork(extproc, plumbc, STACK, RFFDG);
+	close(kekfd[0]);
 	return 1;
 }
 

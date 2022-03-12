@@ -28,9 +28,10 @@ enum Menu2
 	Plumb,
 	Look,
 	Search,
-	NMENU2 = Search,
+	Wtf,
+	NMENU2,
 	Send = Search,
-	NMENU2C
+	NMENU2C,
 };
 
 enum Menu3
@@ -50,6 +51,7 @@ char	*menu2str[] = {
 	"plumb",
 	"look",
 	0,		/* storage for last pattern */
+	"lul",
 };
 
 char	*menu3str[] = {
@@ -64,9 +66,12 @@ Menu	menu2 =	{0, genmenu2};
 Menu	menu2c ={0, genmenu2c};
 Menu	menu3 =	{0, genmenu3};
 
+extern int kekfd[2];
+
 void
 menu2hit(void)
 {
+	char s[64];
 	Text *t=(Text *)which->user1;
 	int w = which-t->l;
 	int m;
@@ -107,12 +112,21 @@ menu2hit(void)
 		break;
 
 	case Search:
+		if(menu2str[Search] == nil)
+			break;
 		outcmd();
 		if(t==&cmd)
 			outTsll(Tsend, 0 /*ignored*/, which->p0, which->p1);
 		else
 			outT0(Tsearch);
 		setlock();
+		break;
+	case Wtf:
+		/*
+		memset(s, 0, sizeof s);
+		snprint(s, sizeof s, ",d\n");
+		write(kekfd[1], s, strlen(s)+1);
+		*
 		break;
 	}
 }
@@ -316,9 +330,13 @@ genmenu2(int n)
 {
 	Text *t=(Text *)which->user1;
 	char *p;
-	if(n>=NMENU2+(menu2str[Search]!=0))
+	
+	if(n>=NMENU2)
 		return 0;
-	p = menu2str[n];
+	if(n == Search && menu2str[n] == nil)
+		p = "(search)";
+	else
+		p = menu2str[n];
 	if(!hostlock && !t->lock || n==Search || n==Look)
 		return p;
 	return paren(p);

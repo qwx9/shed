@@ -81,7 +81,7 @@ extern Mouse*	mousep;
 extern long	modified;
 extern int	maxtab;
 extern Readbuf	hostbuf[2];	/* double buffer; it's synchronous communication */
-extern Readbuf	plumbbuf[2];	/* double buffer; it's synchronous communication */
+extern Readbuf	plumbbuf[4];	/* double buffer; it's synchronous communication */
 extern Channel *plumbc;
 extern Channel *hostc;
 extern int	hversion;

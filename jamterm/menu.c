@@ -28,7 +28,8 @@ enum Menu2
 	Plumb,
 	Look,
 	Search,
-	Addcmd,
+	Push,
+	Pop,
 	NMENU2,
 	Send = Search,
 	NMENU2C,
@@ -51,11 +52,14 @@ char	*menu2str[] = {
 	"plumb",
 	"look",
 	nil,		/* storage for last pattern */
-	"add cmd",
+	"push",
+	"pop",
 };
 
 int	ncmd;
+int	ncbuf;
 char	**cmds;
+char	**clabels;
 
 char	*menu3str[] = {
 	"new",
@@ -125,14 +129,35 @@ menu2hit(void)
 		setlock();
 		break;
 
-	case Addcmd:
+	case Push:
+		if(t == &cmd)
+			break;
 		memset(sbuf, 0, sizeof sbuf);
 		if(enter(nil, sbuf, sizeof sbuf, mousectl, keyboardctl, nil) < 0
 		|| strlen(sbuf) == 0)
 			break;
-		if((cmds = realloc(cmds, (ncmd+1) * sizeof cmds)) == nil)
-			panic("realloc");
-		cmds[ncmd++] = strdup(sbuf);
+		if(ncmd >= ncbuf){
+			if((cmds = realloc(cmds, (ncbuf+1) * sizeof *cmds)) == nil)
+				panic("realloc");
+			if((clabels = realloc(clabels, (ncbuf+1) * sizeof *clabels)) == nil)
+				panic("realloc");
+			ncbuf++;
+		}
+		if((cmds[ncmd] = strdup(sbuf)) == nil)
+			panic("strdup");
+		if((clabels[ncmd] = mallocz(25, 1)) == nil)
+			panic("mallocz");
+		if(snprint(clabels[ncmd], 24, "%s", sbuf) >= 24-3)
+			snprint(clabels[ncmd]+24-3, 3, "...");
+		ncmd++;
+		break;
+
+	case Pop:
+		if(t == &cmd || ncmd <= 0)
+			break;
+		ncmd--;
+		free(cmds[ncmd]);
+		cmds[ncmd] = nil;
 		break;
 
 	default:
@@ -349,10 +374,12 @@ genmenu2(int n)
 	
 	if(n >= NMENU2 + ncmd)
 		return 0;
-	if(n == Search && menu2str[n] == nil)
+	if(n == Pop)
+		p = ncmd <= 0 ? "(pop)" : "pop";
+	else if(n == Search && menu2str[n] == nil)
 		p = "(search)";
 	else if(n >= NMENU2)
-		p = cmds[n-NMENU2];
+		p = clabels[n-NMENU2];
 	else
 		p = menu2str[n];
 	if(!hostlock && !t->lock || n==Search || n==Look)

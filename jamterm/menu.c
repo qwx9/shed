@@ -149,8 +149,9 @@ menu2hit(void)
 			panic("mallocz");
 		if(snprint(clabels[ncmd], 24, "%s", sbuf) >= 24-3)
 			snprint(clabels[ncmd]+24-3, 3, "...");
+		m = NMENU2 + ncmd;
 		ncmd++;
-		break;
+		goto load;
 
 	case Pop:
 		if(t == &cmd || ncmd <= 0)
@@ -160,6 +161,7 @@ menu2hit(void)
 		cmds[ncmd] = nil;
 		break;
 
+	load:
 	default:
 		m -= NMENU2;
 		if(m < 0 || m >= ncmd)

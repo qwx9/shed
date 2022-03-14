@@ -82,18 +82,12 @@ menu2hit(void)
 	Text *t=(Text *)which->user1;
 	int w = which-t->l;
 	int m;
-	Point p;
 
 	if(hversion==0 || plumbfd<0)
 		menu2str[Plumb] = "(plumb)";
-	p = subpt(mousectl->xy, screen->r.min);
 	m = menuhit(2, mousectl, t==&cmd? &menu2c : &menu2, nil);
 	if(hostlock || t->lock)
 		return;
-	if(which != nil){
-		which->warpto = p;
-		warpmouse(which);
-	}
 
 	switch(m){
 	case Cut:

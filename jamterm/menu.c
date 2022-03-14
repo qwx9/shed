@@ -83,14 +83,11 @@ menu2hit(void)
 	int w = which-t->l;
 	int m;
 	Point p;
-	Menu *menu;
 
 	if(hversion==0 || plumbfd<0)
 		menu2str[Plumb] = "(plumb)";
 	p = subpt(mousectl->xy, screen->r.min);
-	menu = t == &cmd ? &menu2c : &menu2;
-	menu->lasthit = 0;
-	m = menuhit(2, mousectl, menu, nil);
+	m = menuhit(2, mousectl, t==&cmd? &menu2c : &menu2, nil);
 	if(hostlock || t->lock)
 		return;
 	if(which != nil){

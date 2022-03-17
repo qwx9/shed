@@ -99,6 +99,7 @@ inmesg(Hmesg type, int count)
 	Text *t;
 	int i, m;
 	long l;
+	vlong vl;
 	Flayer *lp;
 
 	m = inshort(0);
@@ -115,15 +116,15 @@ inmesg(Hmesg type, int count)
 		break;
 
 	case Hbindname:
-		l = invlong(2);		/* for 64-bit pointers */
+		vl = invlong(2);		/* for 64-bit pointers */
 		if((i=whichmenu(m)) < 0)
 			break;
 		/* in case of a race, a bindname may already have occurred */
 		if((t=whichtext(m)) == 0)
-			t=(Text *)l;
+			t=(Text *)vl;
 		else	/* let the old one win; clean up the new one */
-			while(((Text *)l)->nwin>0)
-				closeup(&((Text *)l)->l[((Text *)l)->front]);
+			while(((Text *)vl)->nwin>0)
+				closeup(&((Text *)vl)->l[((Text *)vl)->front]);
 		text[i] = t;
 		text[i]->tag = m;
 		break;

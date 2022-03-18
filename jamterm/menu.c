@@ -195,7 +195,7 @@ menu3hit(void)
 	case Resize:
 		if(hostlock || l == nil)
 			break;
-		if(promptrect(&r))
+		if(promptrect(&r, l))
 			duplicate(l, r, l->f.font, m == Resize);
 		break;
 
@@ -237,7 +237,7 @@ menu3hit(void)
 }
 
 Rectangle
-stealrect(Point p)
+stealrect(Point p, Flayer *l)
 {
 	int i;
 	Rectangle *c, *r;
@@ -250,7 +250,10 @@ stealrect(Point p)
 			continue;
 		fl = t->l + t->front;
 		c = &fl->entire;
-		if(fl->textfn == nil || fl->visible == None || !ptinrect(p, *c))
+		if(l == fl
+		|| fl->textfn == nil
+		|| fl->visible == None
+		|| !ptinrect(p, *c))
 			continue;
 		if(fl->visible == All)
 			return *c;
@@ -269,7 +272,7 @@ sweeptext(int new, int tag)
 
 	if((t = mallocz(sizeof(*t), 1)) == nil)
 		return nil;
-	r = stealrect(mousep->xy);
+	r = stealrect(mousep->xy, nil);
 	if(Dx(r) < 2*FLMARGIN || Dy(r) < 2*FLMARGIN)
 		r = cmd.l[cmd.front].entire;
 	current((Flayer *)0, 0, 0);

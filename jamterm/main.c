@@ -344,15 +344,15 @@ inflatepoint(Point p)
 }
 
 int
-promptrect(Rectangle *r)
+promptrect(Rectangle *r, Flayer *l)
 {
 	*r = getrect(3, mousectl);
 	if(eqrect(*r, ZR))
 		return 0;
 	if(Dx(*r) < 8*font->width && Dy(*r) < 2*font->height)
-		*r = stealrect(r->min);
+		*r = stealrect(r->min, l);
 	if(rectclip(r, screen->r) == 0)
-		*r = stealrect(mousep->xy);
+		*r = stealrect(mousep->xy, l);
 	if(Dx(*r) < 2*FLMARGIN || Dy(*r) < 2*FLMARGIN)
 		*r = cmd.l[cmd.front].entire;
 	return 1;

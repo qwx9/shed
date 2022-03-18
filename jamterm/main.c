@@ -316,6 +316,34 @@ buttons(int updown)
 }
 
 Rectangle
+stealrect(Point p, Flayer *l)
+{
+	int i;
+	Rectangle *c, *r;
+	Flayer *fl;
+	Text *t;
+
+	for(i=0, r=nil; i<nname; i++){
+		t = text[i];
+		if(t == nil || t->nwin == 0)
+			continue;
+		fl = t->l + t->front;
+		c = &fl->entire;
+		if(l == fl
+		|| fl->textfn == nil
+		|| fl->visible == None
+		|| !ptinrect(p, *c))
+			continue;
+		if(fl->visible == All)
+			return *c;
+		/* hit-or-miss */
+		if(r == nil || Dx(*c) < Dx(*r) || Dy(*c) < Dy(*r))
+			r = c;
+	}
+	return r != nil ? *r : inflatepoint(mousep->xy);
+}
+
+Rectangle
 inflatepoint(Point p)
 {
 	Rectangle *c;

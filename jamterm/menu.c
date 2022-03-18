@@ -236,34 +236,6 @@ menu3hit(void)
 	}
 }
 
-Rectangle
-stealrect(Point p, Flayer *l)
-{
-	int i;
-	Rectangle *c, *r;
-	Flayer *fl;
-	Text *t;
-
-	for(i=1, r=nil; i<nname; i++){
-		t = text[i];
-		if(t == nil || t->nwin == 0)
-			continue;
-		fl = t->l + t->front;
-		c = &fl->entire;
-		if(l == fl
-		|| fl->textfn == nil
-		|| fl->visible == None
-		|| !ptinrect(p, *c))
-			continue;
-		if(fl->visible == All)
-			return *c;
-		/* hit-or-miss */
-		if(r == nil || Dx(*c) < Dx(*r) || Dy(*c) < Dy(*r))
-			r = c;
-	}
-	return r != nil ? *r : inflatepoint(mousep->xy);
-}
-
 Text *
 sweeptext(int new, int tag)
 {
@@ -272,8 +244,7 @@ sweeptext(int new, int tag)
 
 	if((t = mallocz(sizeof(*t), 1)) == nil)
 		return nil;
-	r = stealrect(mousep->xy, nil);
-	if(Dx(r) < 2*FLMARGIN || Dy(r) < 2*FLMARGIN)
+	if(!promptrect(&r, nil))
 		r = cmd.l[cmd.front].entire;
 	current((Flayer *)0, 0, 0);
 	flnew(&t->l[0], gettext, 0, (char *)t);

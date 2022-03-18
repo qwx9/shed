@@ -1,0 +1,56 @@
+diff d55a64c90512aae66b5cabac57edc3e957bd3f0c uncommitted
+--- a/sys/src/cmd/aux/statusbar.c
++++ b/sys/src/cmd/aux/statusbar.c
+@@ -18,10 +18,23 @@
+ void
+ initcolor(void)
+ {
+-	text = display->black;
+-	light = allocimagemix(display, DPalegreen, DWhite);
+-	dark = allocimage(display, Rect(0,0,1,1), CMAP8, 1, DDarkgreen);
+-	if(light == nil || dark == nil) sysfatal("initcolor: %r");
++	enum{
++		Ctext,
++		Clight,
++		Cdark,
++		Ncols,
++	};
++	Theme th[Ncols] = {
++		[Ctext] { "text",	DBlack },
++		[Clight] { "back",	0xEAFFEAFF },
++		[Cdark]	{ "border",	DDarkgreen },
++	};
++	readtheme(th, nelem(th), nil);
++
++	text = allocimage(display, Rect(0,0,1,1), screen->chan, 1, th[Ctext].c);
++	light = allocimage(display, Rect(0,0,1,1), screen->chan, 1, th[Clight].c);
++	dark = allocimage(display, Rect(0,0,1,1), screen->chan, 1, th[Cdark].c);
++	if(text == nil || light == nil || dark == nil) sysfatal("initcolor: %r");
+ }
+ 
+ Rectangle rbar;
+--- a/sys/src/cmd/aux/statusmsg.c
++++ b/sys/src/cmd/aux/statusmsg.c
+@@ -20,9 +20,19 @@
+ void
+ initcolor(void)
+ {
+-	text = display->black;
+-	light = allocimagemix(display, DPalegreen, DWhite);
+-	if(light == nil) sysfatal("initcolor: %r");
++	enum{
++		Ctext,
++		Clight,
++		Ncols,
++	};
++	Theme th[Ncols] = {
++		[Ctext] { "text",	DBlack },
++		[Clight] { "back",	0xEAFFEAFF },
++	};
++	readtheme(th, nelem(th), nil);
++	text = allocimage(display, Rect(0,0,1,1), screen->chan, 1, th[Ctext].c);
++	light = allocimage(display, Rect(0,0,1,1), screen->chan, 1, th[Clight].c);
++	if(text == nil || light == nil) sysfatal("initcolor: %r");
+ }
+ 
+ void

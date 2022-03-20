@@ -1,0 +1,296 @@
+diff 00542efd15c5ee37fa927fbe9ba85a2bb377d406 uncommitted
+--- a/sys/src/cmd/page.c
++++ b/sys/src/cmd/page.c
+@@ -33,6 +33,7 @@
+ int imode;
+ int newwin;
+ int rotate;
++int invert;
+ int viewgen;
+ int forward;	/* read ahead direction: >= 0 forwards, < 0 backwards */
+ Point resize, pos;
+@@ -49,7 +50,14 @@
+ ulong imemlimit = 16*MiB;
+ ulong imemsize;
+ 
+-Image *frame, *paper, *ground;
++enum{
++	Cground,
++	Cpaper,
++	Cframe,
++	Ctext,
++	Ncols,
++};
++Image *cols[Ncols];
+ 
+ char pagespool[] = "/tmp/pagespool.";
+ 
+@@ -67,6 +75,7 @@
+ 	Cfitheight,
+ 	Crotate90,
+ 	Cupsidedown,
++	Cinvert,
+ 	Cdummy1,
+ 	Cnext,
+ 	Cprev,
+@@ -74,7 +83,10 @@
+ 	Czerox,
+ 	Cwrite,
+ 	Cext,
++	Cpop,
+ 	Cdummy2,
++	Cdelete,
++	Cdummy3,
+ 	Cquit,
+ };
+ 
+@@ -91,6 +103,7 @@
+ 	[Cfitheight]	"fit height",	'h', 0, 0,
+ 	[Crotate90]	"rotate 90",	'r', 0, 0,
+ 	[Cupsidedown]	"upside down",	'u', 0, 0,
++	[Cinvert]	"invert",	'i', 0, 0,
+ 	[Cdummy1]	"",		0, 0, 0,
+ 	[Cnext]		"next",		Kright, ' ', '\n', 
+ 	[Cprev]		"prev",		Kleft, Kbs, 0,
+@@ -98,7 +111,10 @@
+ 	[Czerox]	"zerox",	'z', 0, 0,
+ 	[Cwrite]	"write",	'w', 0, 0,
+ 	[Cext]		"ext",		'x', 0, 0,
++	[Cpop]		"pop",		'p', 0, 0,
+ 	[Cdummy2]	"",		0, 0, 0,
++	[Cdelete]	"delete",	'D', 0, 0,
++	[Cdummy3]	"",		0, 0, 0,
+ 	[Cquit]		"quit",		'q', Kdel, Keof,
+ };
+ 
+@@ -134,6 +150,7 @@
+ void showpage(Page *);
+ void drawpage(Page *);
+ Point pagesize(Page *);
++void drawlock(int);
+ 
+ Page*
+ addpage(Page *up, char *name, int (*popen)(Page *), void *pdata, int fd)
+@@ -894,6 +911,26 @@
+ }
+ 
+ void
++invertimage(Image *i)
++{
++	int n, m;
++	uchar *b;
++	uintptr *buf, *p;
++
++	n = imagesize(i);
++	if((buf = malloc(n)) == nil)
++		return;
++	unloadimage(i, i->r, (uchar*)buf, n);
++	m = n;
++	for(p=buf; m>=sizeof *p; m-=sizeof *p, p++)
++		*p = ~*p;
++	for(b=(uchar*)p; m>0; m--, b++)
++		*b = ~*b;
++	loadimage(i, i->r, (uchar*)buf, n);
++	free(buf);
++}
++
++void
+ loadpage(Page *p)
+ {
+ 	int fd;
+@@ -909,6 +946,8 @@
+ 			p->open = nil;
+ 		else {
+ 			lockdisplay(display);
++			if(invert)
++				invertimage(p->image);
+ 			imemsize += imagesize(p->image);
+ 			unlockdisplay(display);
+ 		}
+@@ -987,6 +1026,72 @@
+ 	}
+ }
+ 
++/* doesn't actually free the page entry or touch links to avoid breakage */
++Page*
++freepage(Page *p, Page *prev)
++{
++	Page *next, *up;
++
++	drawlock(0);
++	unloadpage(p);
++	drawlock(1);
++	if(p->fd >= 0)
++		close(p->fd);
++	p->fd = -1;
++	/* not touching p->data */
++	free(p->name);
++	p->name = nil;
++	p->open = nil;
++	next = nextpage(p);
++	up = p->up;
++	if(up->down == p){
++		if(up->tail != p)
++			up->down = next;
++		else
++			up->down = nil;
++	}else if(up->tail == p){
++		up->tail = prev;
++		prev->next = nil;
++	}else
++		prev->next = next;
++	return next;
++}
++
++Page*
++poppage(Page *p, int del)
++{
++	Page *t, *prev, *next;
++
++	if(p == nil)
++		return nil;
++	if(p == root)
++		return p;
++	if(del){
++		if(!(access(p->name, OREAD) == 0 && remove(p->name) == 0
++		|| p->data != nil && access(p->data, OREAD) == 0 && remove(p->data) == 0)){
++			fprint(2, "remove %s: %r", p->name);
++			return p;
++		}
++	}
++	qlock(&pagelock);
++	for(t = p->down, prev = p; t != nil && t->up != p->up; prev = t, t = next){
++		qlock(t);
++		next = freepage(t, prev);
++		qunlock(t);
++	}
++	p->down = nil;
++	prev = prevpage(p);
++	next = freepage(p, prev);
++	qunlock(&pagelock);
++	qunlock(p);
++	if(next != nil){
++		forward = 1;
++		return next;
++	}
++	forward = -1;
++	return prev;
++}
++
+ /*
+  * A draw operation that touches only the area contained in bot but not in top.
+  * mp and sp get aligned with bot.min.
+@@ -1121,8 +1226,8 @@
+ void
+ drawframe(Rectangle r)
+ {
+-	border(screen, r, -Borderwidth, frame, ZP);
+-	gendrawdiff(screen, screen->r, insetrect(r, -Borderwidth), ground, ZP, nil, ZP, SoverD);
++	border(screen, r, -Borderwidth, cols[Cframe], ZP);
++	gendrawdiff(screen, screen->r, insetrect(r, -Borderwidth), cols[Cground], ZP, nil, ZP, SoverD);
+ 	flushimage(display, 1);
+ }
+ 
+@@ -1134,13 +1239,13 @@
+ 
+ 	if((i = p->image) != nil){
+ 		r = rectaddpt(Rpt(ZP, pagesize(p)), addpt(pos, screen->r.min));
+-		zoomdraw(screen, r, ZR, paper, i, i->r.min, zoom);
++		zoomdraw(screen, r, ZR, cols[Cpaper], i, i->r.min, zoom);
+ 	} else {
+ 		r = Rpt(ZP, stringsize(font, p->name));
+ 		r = rectaddpt(r, addpt(subpt(divpt(subpt(screen->r.max, screen->r.min), 2),
+ 			divpt(r.max, 2)), screen->r.min));
+-		draw(screen, r, paper, nil, ZP);
+-		string(screen, r.min, display->black, ZP, font, p->name);
++		draw(screen, r, cols[Cpaper], nil, ZP);
++		string(screen, r.min, cols[Ctext], ZP, font, p->name);
+ 	}
+ 	drawframe(r);
+ }
+@@ -1161,7 +1266,7 @@
+ 		draw(screen, rectaddpt(r, d), screen, nil, r.min);
+ 	else
+ 		r = ZR;
+-	zoomdraw(screen, nr, rectaddpt(r, d), paper, i, i->r.min, zoom);
++	zoomdraw(screen, nr, rectaddpt(r, d), cols[Cpaper], i, i->r.min, zoom);
+ 	drawframe(nr);
+ }
+ 
+@@ -1426,6 +1531,7 @@
+ 	drawlock(1);
+ 	if(new && getwindow(display, Refnone) == -1)
+ 		sysfatal("getwindow: %r");
++	draw(screen, screen->r, cols[Cground], nil, ZP);
+ 	if((p = current) != nil){
+ 		if(canqlock(p)){
+ 			drawpage(p);
+@@ -1462,8 +1568,10 @@
+ {
+ 	char buf[NPATH], *s;
+ 	Point o;
+-	int fd;
++	int fd, del;
++	Page *p;
+ 
++	del = 0;
+ 	switch(i){
+ 	case Corigsize:
+ 		pos = ZP;
+@@ -1495,6 +1603,9 @@
+ 		resize = subpt(screen->r.max, screen->r.min);
+ 		resize.x = 0;
+ 		goto Unload;
++	case Cinvert:
++		invert = !invert;
++		goto Unload;
+ 	case Czoomin:
+ 	case Czoomout:
+ 		if(current == nil || !canqlock(current))
+@@ -1548,6 +1659,25 @@
+ 	case Csnarf:
+ 		writeaddr(current, "/dev/snarf");
+ 		break;
++	case Cdelete:
++		del = 1;
++		/* wet floor */
++	case Cpop:
++		if(current == nil || !canqlock(current))
++			break;
++		if((p = poppage(current, del)) == current){
++			qunlock(current);
++			break;
++		}
++		if((current = p) == nil){
++			drawlock(0);
++			draw(screen, screen->r, cols[Cground], nil, ZP);
++			drawframe(screen->r);
++			drawlock(1);
++			break;
++		}
++		showpage(current);
++		break;
+ 	case Cnext:
+ 		forward = 1;
+ 		showpage(nextpage(current));
+@@ -1673,10 +1803,17 @@
+ 	atexit(killcohort);
+ 	if(initdraw(drawerr, nil, argv0) < 0)
+ 		sysfatal("initdraw: %r");
+-	paper = display->white;
+-	frame = display->black;
+-	ground = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x777777FF);
++	Theme th[nelem(cols)] = {
++		[Cground] { "back",	0x777777FF },
++		[Cpaper] { "ltitle",	DWhite },
++		[Cframe] { "border",	DBlack },
++		[Ctext]	{ "text",	DBlack },
++	};
++	readtheme(th, nelem(th), nil);
++	for(i=0; i<nelem(cols); i++)
++ 		cols[i] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, th[i].c);
+ 	display->locking = 1;
++	draw(screen, screen->r, cols[Cground], nil, ZP);
+ 	unlockdisplay(display);
+ 
+ 	einit(Ekeyboard|Emouse);

@@ -1,0 +1,85 @@
+diff 00542efd15c5ee37fa927fbe9ba85a2bb377d406 uncommitted
+--- a/sys/src/cmd/winwatch.c
++++ b/sys/src/cmd/winwatch.c
+@@ -26,9 +26,18 @@
+ int mwin;
+ int onwin;
+ int rows, cols;
+-Image *lightblue;
+-Image *statecol[4];
+ 
++enum{
++	Cback,
++	Ctext,
++	Cstate0,
++	Cstate1,
++	Cstate2,
++	Cstate3,
++	Ncols,
++};
++Image *col[Ncols];
++
+ enum {
+ 	PAD = 3,
+ 	MARGIN = 5
+@@ -168,17 +177,17 @@
+ 	r = Rect(0,0,(Dx(screen->r)-2*MARGIN+PAD)/cols-PAD, font->height);
+ 	r = rectaddpt(rectaddpt(r, Pt(MARGIN+(PAD+Dx(r))*(i/rows),
+ 				MARGIN+(PAD+Dy(r))*(i%rows))), screen->r.min);
+-	draw(screen, insetrect(r, -1), lightblue, nil, ZP);
++	draw(screen, insetrect(r, -1), col[Cback], nil, ZP);
+ }
+ 
+ void
+ drawwin(int i)
+ {
+-	draw(screen, win[i].r, statecol[win[i].state], nil, ZP);
+-	_string(screen, addpt(win[i].r.min, Pt(2,0)), display->black, ZP,
++	draw(screen, win[i].r, col[Cstate0+win[i].state], nil, ZP);
++	_string(screen, addpt(win[i].r.min, Pt(2,0)), col[Ctext], ZP,
+ 		font, win[i].label, nil, strlen(win[i].label), 
+ 		win[i].r, nil, ZP, SoverD);
+-	border(screen, win[i].r, 1, display->black, ZP);	
++	border(screen, win[i].r, 1, col[Ctext], ZP);	
+ 	win[i].dirty = 0;
+ }
+ 
+@@ -217,7 +226,7 @@
+ 
+ 	all |= geometry();
+ 	if(all)
+-		draw(screen, screen->r, lightblue, nil, ZP);
++		draw(screen, screen->r, col[Cback], nil, ZP);
+ 	for(i=0; i<nwin; i++)
+ 		if(all || win[i].dirty)
+ 			drawwin(i);
+@@ -339,16 +348,21 @@
+ 
+ 	if(initdraw(0, fontname, "winwatch") < 0)
+ 		sysfatal("initdraw: %r");
+-	lightblue = allocimagemix(display, DPalebluegreen, DWhite);
+ 
+-	statecol[0] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0xCCCCCCFF);
+-	statecol[1] = lightblue;
+-	statecol[2] = lightblue;
+-	statecol[3] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, DPalegreygreen);
+-
+-	for(i=0; i<nelem(statecol); i++)
+-		if(statecol[i] == nil)
++	Theme th[nelem(col)] = {
++		[Cback] { "back",	0xEAFFFFFF },
++		[Ctext] { "text", 	DBlack },
++		[Cstate0] { "htext",	0xCCCCCCFF },
++		[Cstate1] { "rioback", 	0xEAFFFFFF },
++		[Cstate2] { "palehold",	0xEAFFFFFF },
++		[Cstate3] { "hold",	0x9EEEEEFF },
++	};
++	readtheme(th, nelem(th), nil);
++	for(i=0; i<nelem(col); i++){
++		if((col[i] = allocimage(display, Rect(0,0,1,1),
++		screen->chan, 1, th[i].c)) == nil)
+ 			sysfatal("allocimage: %r");
++	}
+ 
+ 	refreshwin();
+ 	redraw(screen, 1);

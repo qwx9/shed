@@ -1,0 +1,28 @@
+diff 00542efd15c5ee37fa927fbe9ba85a2bb377d406 uncommitted
+--- a/sys/src/cmd/audio/zuke/zuke.c
++++ b/sys/src/cmd/audio/zuke/zuke.c
+@@ -1146,8 +1146,22 @@
+ 	a[3].c = chancreate(sizeof(ind), 0);
+ 	playc = a[3].c;
+ 
+-	for(n = 0; n < Numcolors; n++)
+-		colors[n].im = allocimage(display, Rect(0,0,1,1), RGB24, 1, colors[n].rgb<<8 | 0xff);
++
++	Theme th[Numcolors] = {
++		[Dback] { "back",	0xf0f0f0 },
++		[Dfhigh] { "high",	0xffffff },
++		[Dfmed] { "text",	0x343434 },
++		[Dflow] { "border",	0xa5a5a5 },
++		[Dfinv] { "hold",	0x323232 },
++		[Dbmed] { "menubar",	0x72dec2 },
++		[Dblow] { "ltitle",	0x404040 },
++		[Dbinv] { "paletext",	0xffb545 },
++	};
++	readtheme(th, nelem(th), nil);
++	for(n = 0; n < Numcolors; n++){
++		colors[n].rgb = th[n].c >> 8 & ~(0xff<<24);
++		colors[n].im = allocimage(display, Rect(0,0,1,1), RGB24, 1, th[n].c);
++	}
+ 
+ 	srand(time(0));
+ 	pcurplaying = -1;

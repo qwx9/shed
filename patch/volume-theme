@@ -1,0 +1,54 @@
+diff -Naur a/volume.c b/volume.c
+--- a/volume.c	Sun Mar 20 21:51:52 2022
++++ b/volume.c	Sun Mar 20 21:51:45 2022
+@@ -4,8 +4,14 @@
+ #include <event.h>
+ #include <keyboard.h>
+ 
++enum{
++	Cback,
++	Cbar,
++	Ncols,
++};
++Image *cols[Ncols];
++
+ int volume, muted;
+-Image *back;
+ 
+ void
+ eresized(int new)
+@@ -18,8 +24,8 @@
+ 	r2 = r1;
+ 	r1.min.y = r1.max.y - ((vlong)Dy(r2) * volume) / 100;
+ 	r2.max.y = r1.min.y;
+-	draw(screen, r1, back, nil, ZP);
+-	draw(screen, r2, display->black, nil, ZP);
++	draw(screen, r1, cols[Cbar], nil, ZP);
++	draw(screen, r2, cols[Cback], nil, ZP);
+ 	flushimage(display, 1);
+ }
+ 
+@@ -38,7 +44,7 @@
+ void
+ main()
+ {
+-	int f;
++	int i, f;
+ 	Mouse m;
+ 	Event e;
+ 	char buf[256], *toks[2];
+@@ -53,7 +59,13 @@
+ 	if(initdraw(0, 0, "volume") < 0)
+ 		sysfatal("initdraw failed: %r");
+ 	einit(Emouse|Ekeyboard);
+-	back = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x777777ff);
++	Theme th[nelem(cols)] = {
++		[Cback] { "back",	DBlack },
++		[Cbar] { "menubar",	0x777777FF },
++	};
++	readtheme(th, nelem(th), nil);
++	for(i=0; i<nelem(cols); i++)
++ 		cols[i] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, th[i].c);
+ 	eresized(0);
+ 	for(;;) switch(event(&e)){
+ 	default:

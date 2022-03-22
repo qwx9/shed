@@ -28,10 +28,8 @@ readtheme(Theme *col, int ncol, char *file)
 		if(tokenize(s, v, nelem(v)) <= 0)
 			continue;
 		for(i=0; i<ncol; i++)
-			if(strcmp(v[0], col[i].name) == 0){
+			if(strcmp(v[0], col[i].name) == 0)
 				col[i].c = strtoul(v[1], nil, 16)<<8 | 0xff;
-				break;
-			}
 	}
 	Bterm(bf);
 	return 0;

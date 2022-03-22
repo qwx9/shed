@@ -26,7 +26,7 @@ long	modified = 0;		/* strange lookahead for menus */
 char	hostlock = 1;
 char	hasunlocked = 0;
 int	maxtab = 8;
-int	autoindent;
+int	autoindent = 1;
 int	spacesindent;
 
 static Rectangle

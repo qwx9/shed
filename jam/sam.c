@@ -61,8 +61,8 @@ void main(int argc, char *argv[])
 		dprint("jam: unknown flag %c\n", ARGC());
 		usage();
 	/* options for jamterm */
-	case 'a':
-		*ap++ = "-a";
+	case 'A':
+		*ap++ = "-A";
 		if(ap >= termargs+nelem(termargs))
 			usage();
 		break;

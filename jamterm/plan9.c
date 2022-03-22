@@ -18,7 +18,7 @@ static char exname[64];
 void
 usage(void)
 {
-	fprint(2, "usage: jamterm [-ai]\n");
+	fprint(2, "usage: jamterm [-Ai]\n");
 	threadexitsall("usage");
 }
 
@@ -28,8 +28,8 @@ getscreen(int argc, char **argv)
 	char *t;
 
 	ARGBEGIN{
-	case 'a':
-		autoindent = 1;
+	case 'A':
+		autoindent = 0;
 		break;
 	case 'i':
 		spacesindent = 1;

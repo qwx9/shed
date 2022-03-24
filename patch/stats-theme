@@ -1,7 +1,7 @@
-diff d55a64c90512aae66b5cabac57edc3e957bd3f0c uncommitted
+diff 00542efd15c5ee37fa927fbe9ba85a2bb377d406 uncommitted
 --- a/sys/src/cmd/stats.c
 +++ b/sys/src/cmd/stats.c
-@@ -207,7 +207,23 @@
+@@ -207,7 +207,24 @@
  	tempval,
  };
  
@@ -10,7 +10,8 @@ diff d55a64c90512aae66b5cabac57edc3e957bd3f0c uncommitted
 +	Cbord,
 +	Ctext,
 +	Cmix1,
-+	Nscolor = Cmix1,
++	Cmix2,
++	Nscolor = Cmix2,
 +	Ccol1,
 +	Ccol2,
 +	Ccol3,
@@ -25,19 +26,18 @@ diff d55a64c90512aae66b5cabac57edc3e957bd3f0c uncommitted
  Graph	*graph;
  Machine	*mach;
  char	*mysysname;
-@@ -273,30 +289,23 @@
+@@ -273,30 +290,22 @@
  }
  
  void
 -mkcol(int i, int c0, int c1, int c2)
-+mkcol(int i, int mix, int c)
++mkcol(int i, int mix, int mix2, int c)
  {
 -	cols[i][0] = allocimagemix(display, c0, DWhite);
 -	cols[i][1] = allocimage(display, Rect(0,0,1,1), CMAP8, 1, c1);
 -	cols[i][2] = allocimage(display, Rect(0,0,1,1), CMAP8, 1, c2);
-+	/* dunno lol */
 +	cols[i][0] = allocimagemix(display, c, mix);
-+	cols[i][1] = allocimagemix(display, c, mix ^ ~0xff);
++	cols[i][1] = allocimagemix(display, c, mix2);
 +	cols[i][2] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, c);
  }
  
@@ -59,12 +59,12 @@ diff d55a64c90512aae66b5cabac57edc3e957bd3f0c uncommitted
 -	cols[5][0] = allocimage(display, Rect(0,0,1,1), CMAP8, 1, 0xEEEEEEFF);
 -	cols[5][1] = allocimage(display, Rect(0,0,1,1), CMAP8, 1, 0xCCCCCCFF);
 -	cols[5][2] = allocimage(display, Rect(0,0,1,1), CMAP8, 1, 0x888888FF);
-+	mkcol(0, th[Cmix1].c, th[Ccol1].c);
-+	mkcol(1, th[Cmix1].c, th[Ccol2].c);
-+	mkcol(2, th[Cmix1].c, th[Ccol3].c);
-+	mkcol(3, th[Cmix1].c, th[Ccol4].c);
-+	mkcol(4, th[Cmix1].c, th[Ccol5].c);
-+	mkcol(5, th[Cmix1].c, th[Ccol6].c);
++	mkcol(0, th[Cmix1].c, th[Cmix2].c, th[Ccol1].c);
++	mkcol(1, th[Cmix1].c, th[Cmix2].c, th[Ccol2].c);
++	mkcol(2, th[Cmix1].c, th[Cmix2].c, th[Ccol3].c);
++	mkcol(3, th[Cmix1].c, th[Cmix2].c, th[Ccol4].c);
++	mkcol(4, th[Cmix1].c, th[Cmix2].c, th[Ccol5].c);
++	mkcol(5, th[Cmix1].c, th[Cmix2].c, th[Ccol6].c);
  }
  
  int
@@ -143,7 +143,7 @@ diff d55a64c90512aae66b5cabac57edc3e957bd3f0c uncommitted
  				}
  			}
  		}
-@@ -1411,7 +1420,23 @@
+@@ -1411,7 +1420,24 @@
  		exits("initdraw");
  	}
  	display->locking = 1;	/* tell library we're using the display lock */
@@ -154,6 +154,7 @@ diff d55a64c90512aae66b5cabac57edc3e957bd3f0c uncommitted
 +		[Cbord] { "border",	DBlack },
 +		[Ctext] { "text",	DBlack },
 +		[Cmix1] { "rioback",	DWhite },
++		[Cmix2] { "palehold",	DWhite },
 +		[Ccol1] { "htext",	0xFFAAAAFF },
 +		[Ccol2] { "high",	DPurpleblue },
 +		[Ccol3] { "hold",	DYellowgreen },

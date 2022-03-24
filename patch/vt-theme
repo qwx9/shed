@@ -1,4 +1,4 @@
-diff af6f03e52829a571f1fa3d61c0bfa09a1c89ea36 uncommitted
+diff 00542efd15c5ee37fa927fbe9ba85a2bb377d406 uncommitted
 --- a/sys/src/cmd/vt/main.c
 +++ b/sys/src/cmd/vt/main.c
 @@ -253,13 +253,13 @@
@@ -26,7 +26,7 @@ diff af6f03e52829a571f1fa3d61c0bfa09a1c89ea36 uncommitted
  		break;
  	case 'c':
  		nocolor = 1;
-@@ -334,10 +334,30 @@
+@@ -334,10 +334,29 @@
  		hicolors[i] = allocimage(display, Rect(0,0,1,1), screen->chan, 1,
  			rgbahicolors[i]);
  	}
@@ -38,7 +38,6 @@ diff af6f03e52829a571f1fa3d61c0bfa09a1c89ea36 uncommitted
 +	enum{
 +		BACK,
 +		HIGH,
-+		BORD,
 +		TEXT,
 +		HTEXT,
 +		Ncols,

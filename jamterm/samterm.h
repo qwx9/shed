@@ -144,7 +144,7 @@ int	hdatarune(int, long, Rune*, int);
 Rune	*rload(Rasp*, ulong, ulong, ulong*);
 void	menuins(int, uchar*, Text*, int, int);
 void	menudel(int);
-Rectangle	stealrect(Point, Flayer*);
+Rectangle	expandempty(Point, Flayer*, int);
 Text	*sweeptext(int, int);
 void	setpat(char*);
 void	scrdraw(Flayer*, long tot);
@@ -164,7 +164,7 @@ void	dumperrmsg(int, int, int, int);
 int	screensize(int*,int*);
 void	getmouse(void);
 Rectangle inflatepoint(Point);
-int	promptrect(Rectangle*, Flayer*);
+int	promptrect(Rectangle*, Flayer*, int);
 
 #include "mesg.h"
 

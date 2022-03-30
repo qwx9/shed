@@ -195,7 +195,7 @@ menu3hit(void)
 	case Resize:
 		if(hostlock || l == nil)
 			break;
-		if(promptrect(&r, l))
+		if(promptrect(&r, l, m != Resize))
 			duplicate(l, r, l->f.font, m == Resize);
 		break;
 
@@ -244,8 +244,8 @@ sweeptext(int new, int tag)
 
 	if((t = mallocz(sizeof(*t), 1)) == nil)
 		return nil;
-	if(!promptrect(&r, nil))
-		r = cmd.l[cmd.front].entire;
+	if(!promptrect(&r, nil, new))
+		return nil;
 	current((Flayer *)0, 0, 0);
 	flnew(&t->l[0], gettext, 0, (char *)t);
 	flinit(&t->l[0], r, font, maincols);	/*bnl*/

@@ -320,7 +320,7 @@ buttons(int updown)
 }
 
 Rectangle
-expandempty(Point p)
+expandempty(Point p, Flayer *l, int new)
 {
 	int i;
 	Rectangle c, r;
@@ -338,50 +338,23 @@ expandempty(Point p)
 			|| fl->visible == None
 			|| !rectXrect(r, c))
 				continue;
+			if(!new && fl == l)
+				continue;
 			if(c.max.x <= p.x && c.max.x > r.min.x)
 				r.min.x = c.max.x;
 			if(p.x <= c.min.x && c.min.x < r.max.x)
 				r.max.x = c.min.x;
 			if(!rectXrect(c, r))
-				goto end;
+				continue;
 			if(c.max.y <= p.y && c.max.y > r.min.y)
 				r.min.y = c.max.y;
 			if(p.y <= c.min.y && c.min.y < r.max.y)
 				r.max.y = c.min.y;
-	end:
-			if(Dx(r) < 16*font->width && Dy(r) < 4*font->height)
-				return inflatepoint(p);
 		}
+		if(Dx(r) < 16*font->width && Dy(r) < 4*font->height)
+			return inflatepoint(p);
 	}
 	return r;
-}
-
-Rectangle
-stealrect(Point p, Flayer *l)
-{
-	int i;
-	Rectangle *c, *r;
-	Flayer *fl;
-	Text *t;
-
-	for(i=0, r=nil; i<nname; i++){
-		t = text[i];
-		if(t == nil || t->nwin == 0)
-			continue;
-		fl = t->l + t->front;
-		c = &fl->entire;
-		if(l == fl
-		|| fl->textfn == nil
-		|| fl->visible == None
-		|| !ptinrect(p, *c))
-			continue;
-		if(fl->visible == All)
-			return *c;
-		/* hit-or-miss */
-		if(r == nil || Dx(*c) < Dx(*r) || Dy(*c) < Dy(*r))
-			r = c;
-	}
-	return r != nil ? *r : expandempty(mousep->xy);
 }
 
 Rectangle
@@ -413,17 +386,13 @@ inflatepoint(Point p)
 }
 
 int
-promptrect(Rectangle *r, Flayer *l)
+promptrect(Rectangle *r, Flayer *l, int new)
 {
 	*r = getrect(3, mousectl);
-	if((mousep->buttons & 5) == 1)
-		return 0;
 	if(eqrect(*r, ZR))
 		return 0;
-	if(Dx(*r) < 16*font->width && Dy(*r) < 4*font->height)
-		*r = stealrect(r->min, l);
-	if(rectclip(r, screen->r) == 0)
-		*r = stealrect(mousep->xy, l);
+	if(ptinrect(mousep->xy, screen->r))
+		*r = expandempty(mousep->xy, l, new);
 	if(Dx(*r) < 2*FLMARGIN || Dy(*r) < 2*FLMARGIN)
 		*r = cmd.l[cmd.front].entire;
 	return 1;

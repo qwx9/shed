@@ -332,25 +332,26 @@ expandempty(Point p)
 		t = text[i];
 		if(t == nil || t->nwin == 0)
 			continue;
-		fl = t->l + t->front;
-		c = fl->entire;
-		if(fl->textfn == nil
-		|| fl->visible == None
-		|| !rectXrect(r, c))
-			continue;
-		if(c.max.x <= p.x && c.max.x > r.min.x)
-			r.min.x = c.max.x;
-		if(p.x <= c.min.x && c.min.x < r.max.x)
-			r.max.x = c.min.x;
-		if(!rectXrect(c, r))
-			goto end;
-		if(c.max.y <= p.y && c.max.y > r.min.y)
-			r.min.y = c.max.y;
-		if(p.y <= c.min.y && c.min.y < r.max.y)
-			r.max.y = c.min.y;
-end:
-		if(Dx(r) < 16*font->width && Dy(r) < 4*font->height)
-			return inflatepoint(p);
+		for(fl=t->l; fl<t->l+NL; fl++){
+			c = fl->entire;
+			if(fl->textfn == nil
+			|| fl->visible == None
+			|| !rectXrect(r, c))
+				continue;
+			if(c.max.x <= p.x && c.max.x > r.min.x)
+				r.min.x = c.max.x;
+			if(p.x <= c.min.x && c.min.x < r.max.x)
+				r.max.x = c.min.x;
+			if(!rectXrect(c, r))
+				goto end;
+			if(c.max.y <= p.y && c.max.y > r.min.y)
+				r.min.y = c.max.y;
+			if(p.y <= c.min.y && c.min.y < r.max.y)
+				r.max.y = c.min.y;
+	end:
+			if(Dx(r) < 16*font->width && Dy(r) < 4*font->height)
+				return inflatepoint(p);
+		}
 	}
 	return r;
 }

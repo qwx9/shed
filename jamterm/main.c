@@ -415,6 +415,8 @@ int
 promptrect(Rectangle *r, Flayer *l)
 {
 	*r = getrect(3, mousectl);
+	if((mousep->buttons & 5) == 1)
+		return 0;
 	if(eqrect(*r, ZR))
 		return 0;
 	if(Dx(*r) < 16*font->width && Dy(*r) < 4*font->height)

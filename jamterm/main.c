@@ -702,16 +702,19 @@ type(Flayer *l, int res)	/* what a bloody mess this is */
 			flushtyping(0);
 		onethird(l, a);
 	}
-	if(c==Kdown || c==Kpgdown){
+	if(c==Kdown){
 		flushtyping(0);
-		center(l, l->origin+l->f.nchars+1);
+		scrorigin(l, 3, l->origin+frcharofpt(&l->f, Pt(l->scroll.max.x, l->scroll.min.y + l->f.font->height)));
+	}else if(c==Kup){
+		flushtyping(0);
+		scrorigin(l, 1, 2);
+	}else if(c==Kpgdown){
+		flushtyping(0);
+		scrorigin(l, 3, l->origin+frcharofpt(&l->f, Pt(l->scroll.max.x, l->scroll.max.y - l->f.font->height)));
 		/* backspacing immediately after outcmd(): sorry */
-	}else if(c==Kup || c==Kpgup){
+	}else if(c==Kpgup){
 		flushtyping(0);
-		a0 = l->origin-l->f.nchars;
-		if(a0 < 0)
-			a0 = 0;
-		center(l, a0);
+		scrorigin(l, 1, Dy(l->scroll)/l->f.font->height);
 	}else if(c == Kright){
 		flushtyping(0);
 		a0 = l->p0;

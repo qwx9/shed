@@ -737,13 +737,19 @@ type(Flayer *l, int res)	/* what a bloody mess this is */
 		center(l, t->rasp.nrunes);
 	}else if(c == Ksoh || c == Kenq){
 		flushtyping(1);
-		if(c == Ksoh)
+		if(c == Ksoh){
+			if(a > 0 && raspc(&t->rasp, a-1)=='\n')
+				a--;
 			while(a > 0 && raspc(&t->rasp, a-1)!='\n')
 				a--;
-		else
-			while(a < t->rasp.nrunes && raspc(&t->rasp, a)!='\n')
+		}else{
+			if(a < t->rasp.nrunes && raspc(&t->rasp, a)=='\n')
 				a++;
-		l->p0 = l->p1 = a;
+ 			while(a < t->rasp.nrunes && raspc(&t->rasp, a)!='\n')
+ 				a++;
+		}
+ 		l->p0 = l->p1 = a;
+		center(l, a);
 		for(l=t->l; l<&t->l[NL]; l++)
 			if(l->textfn)
 				flsetselect(l, l->p0, l->p1);

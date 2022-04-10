@@ -110,6 +110,9 @@ scroll(Flayer *l, int but)
 	Rectangle scr, r, s, rt;
 	int x, y, my, oy, h;
 	long p0;
+ 
+	if(l->visible==None)
+		return;
 
 	s = l->scroll;
 	x = s.min.x+FLSCROLLWID/2;

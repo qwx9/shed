@@ -10,6 +10,7 @@ OFILES=main.$O\
 	flayer.$O\
 	io.$O\
 	plan9.$O\
+	win.$O\
 
 HFILES=samterm.h\
 	flayer.h\

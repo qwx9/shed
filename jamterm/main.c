@@ -306,7 +306,7 @@ duplicate(Flayer *l, Rectangle r, Font *f, int close)
 				which = 0;
 		}else
 			t->nwin++;
-		current(nl, 0, 1);
+		current(nl, 1, 1);
 		hcheck(t->tag);
 	}
 	setcursor(mousectl, cursor);
@@ -317,85 +317,6 @@ buttons(int updown)
 {
 	while(((mousep->buttons&7)!=0) != updown)
 		getmouse();
-}
-
-Rectangle
-expandempty(Point p, Flayer *l, int new)
-{
-	int i;
-	Rectangle c, r;
-	Flayer *fl;
-	Text *t;
-
-	r = screen->r;
-	for(i=0; i<nname; i++){
-		t = text[i];
-		if(t == nil || t->nwin == 0)
-			continue;
-		for(fl=t->l; fl<t->l+NL; fl++){
-			c = fl->entire;
-			if(fl->textfn == nil
-			|| fl->visible == None
-			|| !rectXrect(r, c))
-				continue;
-			if(!new && fl == l)
-				continue;
-			if(c.max.x <= p.x && c.max.x > r.min.x)
-				r.min.x = c.max.x;
-			if(p.x <= c.min.x && c.min.x < r.max.x)
-				r.max.x = c.min.x;
-			if(!rectXrect(c, r))
-				continue;
-			if(c.max.y <= p.y && c.max.y > r.min.y)
-				r.min.y = c.max.y;
-			if(p.y <= c.min.y && c.min.y < r.max.y)
-				r.max.y = c.min.y;
-		}
-		if(Dx(r) < 16*font->width && Dy(r) < 4*font->height)
-			return inflatepoint(p);
-	}
-	return r;
-}
-
-Rectangle
-inflatepoint(Point p)
-{
-	Rectangle *c;
-	Rectangle r;
-	
-	r = screen->r;
-	c = &cmd.l[cmd.front].entire;
-	// L
-	if(p.x < c->min.x)
-		r.max.x = c->min.x;
-	// R
-	else if(p.x >= c->max.x)
-		r.min.x = c->max.x;
-	// M
-	else{
-		r.min.x = c->min.x;
-		//r.max.x = screen->max.x;
-		// A
-		if(p.y <= c->min.y)
-			r.max.y = c->min.y;
-		// B
-		else
-			r.min.y = c->max.y;
-	}
-	return r;
-}
-
-int
-promptrect(Rectangle *r, Flayer *l, int new)
-{
-	*r = getrect(3, mousectl);
-	if(eqrect(*r, ZR))
-		return 0;
-	if(ptinrect(mousep->xy, screen->r))
-		*r = expandempty(mousep->xy, l, new);
-	if(Dx(*r) < 2*FLMARGIN || Dy(*r) < 2*FLMARGIN)
-		*r = cmd.l[cmd.front].entire;
-	return 1;
 }
 
 void

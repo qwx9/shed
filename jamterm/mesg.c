@@ -130,16 +130,15 @@ inmesg(Hmesg type, int count)
 		break;
 
 	case Hcurrent:
-		if(whichmenu(m)<0)
+		if(whichmenu(m) < 0)
 			break;
-		t = whichtext(m);
-		i = which && ((Text *)which->user1)==&cmd && m!=cmd.tag;
-		if(t==0 && (t = sweeptext(0, m))==0)
+		if((t = whichtext(m)) == nil
+		&& (t = sweeptext(0, m)) == nil)
 			break;
-		if(t->l[t->front].textfn==0)
+		if(t->l[t->front].textfn == nil)
 			panic("Hcurrent");
 		lp = &t->l[t->front];
-		if(i){
+		if(which != nil && ((Text *)which->user1) == &cmd && m != cmd.tag){
 			flupfront(lp);
 			flborder(lp, 0);
 			work = lp;

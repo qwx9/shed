@@ -8,10 +8,68 @@
 #include "flayer.h"
 #include "samterm.h"
 
-Rectangle
-static snaprect(Rectangle r)
+enum{
+	SnapΔ = 8 * FLMARGIN,
+};
+
+/* always prefer innermost border in case of ties */
+static int
+cansnap(int a, int b, int Δ)
 {
-	return r;
+	int δ;
+
+	return (δ = abs(a - b)) <= Δ && (δ != Δ || a < b);
+}
+
+/* use borders of all rects next to ours as guides to snap to */
+static Rectangle
+snaprect(Rectangle r, Flayer *l)
+{
+	int i;
+	Rectangle Δr, s, rr, c;
+	Flayer *fl;
+	Text *t;
+
+	rr = insetrect(r, -SnapΔ);
+	Δr = Rect(SnapΔ, SnapΔ, SnapΔ, SnapΔ);
+	s = r;
+	for(i=0; i<nname; i++){
+		t = text[i];
+		if(t == nil || t->nwin == 0)
+			continue;
+		for(fl=t->l; fl<t->l+NL; fl++){
+			if(fl->textfn == nil || fl == l)
+				continue;
+			c = fl->entire;
+			if(!rectXrect(rr, c))
+				continue;
+			if(cansnap(r.min.x, c.max.x, Δr.min.x))		/* adjacent border */
+				s.min.x = c.max.x, Δr.min.x = abs(r.min.x - c.max.x);
+			else if(cansnap(r.min.x, c.min.x, Δr.min.x))	/* adjacent guide line */
+				s.min.x = c.min.x, Δr.min.x = abs(r.min.x - c.min.x);
+			if(cansnap(r.min.y, c.max.y, Δr.min.y))
+				s.min.y = c.max.y, Δr.min.y = abs(r.min.y - c.max.y);
+			else if(cansnap(r.min.y, c.min.y, Δr.min.y))
+				s.min.y = c.min.y, Δr.min.y = abs(r.min.y - c.min.y);
+			if(cansnap(c.min.x, r.max.x, Δr.max.x))
+				s.max.x = c.min.x, Δr.max.x = abs(c.min.x - r.max.x);
+			else if(cansnap(c.max.x, r.max.x, Δr.max.x))
+				s.max.x = c.max.x, Δr.max.x = abs(c.max.x - r.max.x);
+			if(cansnap(c.min.y, r.max.y, Δr.max.y))
+				s.max.y = c.min.y, Δr.max.y = abs(c.min.y - r.max.y);
+			else if(cansnap(c.max.y, r.max.y, Δr.max.y))
+				s.max.y = c.max.y, Δr.max.y = abs(c.max.y - r.max.y);
+		}
+	}
+	if(cansnap(r.min.x, screen->r.min.x, Δr.min.x))
+		s.min.x = screen->r.min.x;
+	if(cansnap(r.min.y, screen->r.min.y, Δr.min.y))
+		s.min.y = screen->r.min.y;
+	if(cansnap(screen->r.max.x, r.max.x, Δr.max.x))
+		s.max.x = screen->r.max.x;
+	if(cansnap(screen->r.max.y, r.max.y, Δr.max.y))
+		s.max.y = screen->r.max.y;
+	return s;
 }
 
 /* in case of overlaps, always glob the smallest rect rather than
@@ -104,7 +162,7 @@ promptrect(Rectangle *rp, Flayer *l, int new)
 		if(eqrect(r, ZR))
 			r = stealrect(p);
 	}else
-		r = snaprect(r);
+		r = snaprect(r, l);
 	*rp = r;
 	return 1;
 }

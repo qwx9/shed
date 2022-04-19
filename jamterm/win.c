@@ -9,7 +9,7 @@
 #include "samterm.h"
 
 enum{
-	SnapΔ = 8 * FLMARGIN,
+	SnapΔ = 16 * FLMARGIN,
 };
 
 /* always prefer innermost border in case of ties */

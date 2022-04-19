@@ -125,6 +125,8 @@ fillvoid(Point p, Flayer *l, int new)
 				continue;
 			if(!new && fl == l)
 				continue;
+			if(ptinrect(p, fl->entire))
+				return ZR;
 			if(c.max.x <= p.x && c.max.x > r.min.x)
 				r.min.x = c.max.x;
 			if(p.x <= c.min.x && c.min.x < r.max.x)

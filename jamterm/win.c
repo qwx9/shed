@@ -12,6 +12,37 @@ enum{
 	SnapΔ = 16 * FLMARGIN,
 };
 
+int
+max(int a, int b)
+{
+	return a > b ? a : b;
+}
+
+Rectangle
+defaultcmdrect(void)
+{
+	int rw, rh, fw, fh;
+	Rectangle r;
+
+	fw = stringwidth(font, "0");
+	fh = font->height;
+	rw = Dx(screen->r) / fw;
+	rh = Dy(screen->r) / fh;
+	r = screen->r;
+	if(rw < 6 || rh < 3){
+		;
+	}else if(rw >= 130){
+		r.min.x = r.max.x - 50 * fw;
+		r.min.y += 5 * Dy(screen->r) / 8;
+		r.max.y = r.min.y + max(Dy(screen->r) / 8, 2*fh);
+	}else if(rw >= 60){
+		r.min.x += Dx(screen->r) / 2;
+		r.max.y = r.min.y + max(Dy(screen->r) / 8, 2*fh);
+	}else
+		r.max.y = r.min.y + max(Dy(screen->r) / 5, 2*fh);
+	return r;
+}
+
 /* always prefer innermost border in case of ties */
 static int
 cansnap(int a, int b, int Δ)

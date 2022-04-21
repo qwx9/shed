@@ -29,33 +29,6 @@ int	maxtab = 8;
 int	autoindent = 1;
 int	spacesindent;
 
-static Rectangle
-defaultcmdrect(void)
-{
-	int rw, rh, fw, fh;
-	Rectangle r;
-
-	rw = 2 * Dx(screen->r) / 12;
-	rh = Dy(screen->r) / 3;
-	fw = stringwidth(font, "0");
-	fh = font->height;
-	if(rw < 20 * fw)
-		rw = Dx(screen->r);
-	else if(rw > 100 * fw)
-		rw = 100 * fw;
-	r.min.x = screen->r.max.x - Dx(screen->r) / 2 - rw / 2;
-	r.max.x = r.min.x + rw;
-	r.min.y = screen->r.min.y;
-	r.max.y = r.min.y + rh;
-	if(rh > 10 * fh){
-		r.max.y = r.min.y + 10 * fh;
-		if(rw != Dx(screen->r))
-			r = rectaddpt(r, Pt(0, Dy(screen->r) / 2 - rh / 2));
-	}else if(Dy(r) < fh + 2*FLMARGIN)
-		r.max.y = r.min.y + fh + 2*FLMARGIN;
-	return r;
-}
-
 void
 threadmain(int argc, char *argv[])
 {

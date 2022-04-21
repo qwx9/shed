@@ -164,6 +164,7 @@ int	screensize(int*,int*);
 void	getmouse(void);
 Rectangle inflatepoint(Point);
 int	promptrect(Rectangle*, Flayer*, int);
+Rectangle	defaultcmdrect(void);
 
 #include "mesg.h"
 

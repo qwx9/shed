@@ -189,6 +189,7 @@ warpmouse(Flayer *l)
 void
 current(Flayer *nw, int warp, int up)
 {
+	int i, ign;
 	Text *t;
 
 	if(which){
@@ -203,9 +204,11 @@ current(Flayer *nw, int warp, int up)
 		//buttons(Up);
 		t = (Text *)nw->user1;
 		t->front = nw-&t->l[0];
+		i = whichmenu(t->tag);
+		ign = i >= 0 && strstr((char *)name[i], "jam.err") != nil;
 		if(t != &cmd){
-			work = nw;
-			if(up)
+			work = ign ? nil : nw;
+			if(up && !ign)
 				fllinkhead(nw);
 		}
 		if(warp)
@@ -691,8 +694,8 @@ type(Flayer *l, int res)	/* what a bloody mess this is */
 		a = t->rasp.nrunes;
 		flsetselect(l, a, a);
 		center(l, a);
- 	}else if(c == Kbel){
- 		int up = 1;
+	}else if(c == Kbel){
+		int up = 1;
 		t = &cmd;
 		if(work != nil){
 			if(which != work){
@@ -705,7 +708,8 @@ type(Flayer *l, int res)	/* what a bloody mess this is */
 		if(t == &cmd || t->nwin == 1 && nname > 1){
 			if(flru.lnext == &flru)
 				return;
-			for(l=work!=nil?work->lnext:flru.lnext; l==&flru; l=l->lnext)
+			l = work != nil && work->lnext != nil ? work->lnext : flru.lnext;
+			for(; l==&flru; l=l->lnext)
 				;
 			up = 0;
 		}else{

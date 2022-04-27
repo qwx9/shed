@@ -31,11 +31,11 @@ defaultcmdrect(void)
 	r = screen->r;
 	if(rw < 6 || rh < 3){
 		;
-	}else if(rw >= 130){
-		r.min.x = r.max.x - 50 * fw;
+	}else if(rw >= 150){
+		r.min.x = r.max.x - 60 * fw;
 		r.min.y += 5 * Dy(screen->r) / 8;
 		r.max.y = r.min.y + max(Dy(screen->r) / 8, 2*fh);
-	}else if(rw >= 60){
+	}else if(rw >= 80){
 		r.min.x += Dx(screen->r) / 2;
 		r.max.y = r.min.y + max(Dy(screen->r) / 8, 2*fh);
 	}else

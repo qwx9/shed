@@ -694,10 +694,12 @@ printposn(File *f, int chars)
 	char *s;
 
 	if(f->name.s[0]){
-		getcurwd();
-		s = Strtoc(&curwd);
-		dprint("%s", s);
-		free(s);
+		if(f->name.s[0]!='/'){
+			getcurwd();
+			s = Strtoc(&curwd);
+			dprint("%s", s);
+			free(s);
+		}
 		s = Strtoc(&f->name);
 		dprint("%s:", s);
 		free(s);

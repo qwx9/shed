@@ -123,12 +123,6 @@ stealrect(Point p)
 			|| !ptinrect(p, fl->entire))
 				continue;
 			c = fl->entire;
-			/* certain to have clicked on this rect,
-			 * and it's on top */
-			if(fl->visible == All)
-				return c;
-			/* otherwise, there are only overlapping
-			 * rects, find the smallest one */
 			if(Dx(c) * Dy(c) < Dx(r) * Dx(r))
 				r = c;
 		}

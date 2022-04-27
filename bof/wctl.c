@@ -148,7 +148,7 @@ newrect(void)
 	static int i = 0;
 	int minx, miny, dx, dy;
 
-	dx = min(960, Dx(screen->r) - 2*Borderwidth);
+	dx = max(Dx(screen->r) / 4, 400);
 	dy = min(Dy(screen->r) / 2, Dy(screen->r) - 2*Borderwidth);
 	minx = Dx(screen->r) / 2 - dx + 16*i;
 	miny = 8 + 16*i;

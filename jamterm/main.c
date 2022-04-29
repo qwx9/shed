@@ -217,33 +217,52 @@ current(Flayer *nw, int warp, int up)
 	which = nw;
 }
 
+Flayer *
+cycle(void)
+{
+	int i;
+	Flayer *l;
+
+	if(flru.lnext == &flru){
+		for(i=0; cmd.l[i].textfn==0; i++)
+			;
+		return &cmd.l[i];
+	}
+	l = work != nil && work->lnext != nil ? work->lnext : flru.lnext;
+	for(; l==&flru; l=l->lnext)
+		;
+	return l;
+}
+
 void
 closeup(Flayer *l)
 {
 	Text *t=(Text *)l->user1;
-	int i, m;
+	int m;
 
 	m = whichmenu(t->tag);
 	if(m < 0)
 		return;
 	flunlink(l);
 	flclose(l);
-	if(l == which){
-		which = nil;
-		for(i=0; cmd.l[i].textfn==0; i++)
-			;
-		current(&cmd.l[i], 1, 1);
-	}
 	if(l == work)
 		work = 0;
 	if(--t->nwin == 0){
 		rclear(&t->rasp);
 		free((uchar *)t);
 		text[m] = 0;
+		if(l == which){
+			which = nil;
+			current(cycle(), 1, 0);
+		}
 	}else if(l == &t->l[t->front]){
 		for(m=0; m<NL; m++)	/* find one; any one will do */
 			if(t->l[m].textfn){
 				t->front = m;
+				if(l == which){
+					which = nil;
+					current(&t->l[m], 1, 0);
+				}
 				return;
 			}
 		panic("close");
@@ -708,9 +727,7 @@ type(Flayer *l, int res)	/* what a bloody mess this is */
 		if(t == &cmd || t->nwin == 1 && nname > 1){
 			if(flru.lnext == &flru)
 				return;
-			l = work != nil && work->lnext != nil ? work->lnext : flru.lnext;
-			for(; l==&flru; l=l->lnext)
-				;
+			l = cycle();
 			up = 0;
 		}else{
 	 		for(int i=t->front; (i = (i+1)%NL) != t->front; )

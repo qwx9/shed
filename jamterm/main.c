@@ -66,9 +66,12 @@ threadmain(int argc, char *argv[])
 		if(got&(1<<RPlumb)){
 			for(i=0; cmd.l[i].textfn==0; i++)
 				;
-			current(&cmd.l[i], 0, 1);
+			nwhich = which;
+			which = nil;
+			current(&cmd.l[i], 0, 0);
 			flsetselect(which, cmd.rasp.nrunes, cmd.rasp.nrunes);
 			type(which, RPlumb);
+			current(nwhich, 0, 0);
 		}
 		if(got&(1<<RKeyboard))
 			if(which)

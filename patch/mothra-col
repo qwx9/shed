@@ -1,16 +1,17 @@
-diff 00542efd15c5ee37fa927fbe9ba85a2bb377d406 uncommitted
+diff 63f8dc808490ef038ce868eba62983290e38489d uncommitted
 --- a/sys/src/cmd/mothra/libpanel/draw.c
 +++ b/sys/src/cmd/mothra/libpanel/draw.c
-@@ -14,21 +14,40 @@
+@@ -14,24 +14,46 @@
  #define	CKINSET	1	/* space around check mark frame */
  #define	CKBORDER 2	/* space around X inside frame */
- static Image *pl_light, *pl_dark, *pl_tick, *pl_hilit;
+ static Image *pl_light, *pl_dark, *pl_scrl, *pl_tick, *pl_hilit;
 -Image *pl_blue, *pl_white, *pl_black;
 +Image *pl_blue, *pl_white, *pl_black, *pl_txt;
  int pl_drawinit(void){
 -	pl_white=allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0xFFFFFFFF);
 -	pl_light=allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0xFFFFFFFF);
 -	pl_dark=allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x777777FF);
+-	pl_scrl=allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x999999FF);
 -	pl_black=allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x000000FF);
 +	enum{
 +		Cwhite,
@@ -19,6 +20,7 @@ diff 00542efd15c5ee37fa927fbe9ba85a2bb377d406 uncommitted
 +		Cblack,
 +		Cblue,
 +		Ctxt,
++		Cscrl,
 +		Ncols,
 +	};
 +	Theme th[Ncols] = {
@@ -28,6 +30,7 @@ diff 00542efd15c5ee37fa927fbe9ba85a2bb377d406 uncommitted
 +		[Cblack] { "menuhigh", 	DBlack },
 +		[Cblue] { "hold",	0x0000FFFF },
 +		[Ctxt] { "text",	DBlack },
++		[Cscrl] { "border",	0x999999FF },
 +	};
 +	readtheme(th, nelem(th), nil);
 +	pl_white=allocimage(display, Rect(0,0,1,1), screen->chan, 1, th[Cwhite].c);
@@ -36,6 +39,7 @@ diff 00542efd15c5ee37fa927fbe9ba85a2bb377d406 uncommitted
 +	pl_black=allocimage(display, Rect(0,0,1,1), screen->chan, 1, th[Cblack].c);
 +	pl_blue=allocimage(display, Rect(0,0,1,1), screen->chan, 1, th[Cblue].c);
 +	pl_txt=allocimage(display, Rect(0,0,1,1), screen->chan, 1, th[Ctxt].c);
++	pl_scrl=allocimage(display, Rect(0,0,1,1), screen->chan, 1, th[Cscrl].c);
  	pl_hilit=allocimage(display, Rect(0,0,1,1), CHAN1(CAlpha,8), 1, 0x80);
 -	pl_blue=allocimage(display, Rect(0,0,1,1), RGB24, 1, 0x0000FFFF);
 -	if((pl_tick = allocimage(display, Rect(0, 0, TICKW, font->height), screen->chan, 0, DNofill)) != nil){
@@ -45,12 +49,15 @@ diff 00542efd15c5ee37fa927fbe9ba85a2bb377d406 uncommitted
  		draw(pl_tick, Rect(0, 0, TICKW, TICKW), pl_black, nil, ZP);
  		draw(pl_tick, Rect(0, font->height-TICKW, TICKW, font->height), pl_black, nil, ZP);
  	}
--	if(pl_white==0 || pl_light==0 || pl_black==0 || pl_dark==0 || pl_blue==0 || pl_tick==0) sysfatal("allocimage: %r");
-+	if(pl_white==0 || pl_light==0 || pl_black==0 || pl_dark==0 || pl_blue==0 || pl_tick==0 || pl_txt==0) sysfatal("allocimage: %r");
+-	if(pl_white==0 || pl_light==0 || pl_black==0 || pl_dark==0 || pl_scrl==0 || pl_blue==0 || pl_tick==0) sysfatal("allocimage: %r");
++	if(pl_white==0 || pl_light==0 || pl_black==0 || pl_dark==0 || pl_scrl==0 || pl_blue==0 || pl_tick==0 || pl_txt==0) sysfatal("allocimage: %r");
  	return 1;
  }
++
  Rectangle pl_boxoutline(Image *b, Rectangle r, int style, int fill){
-@@ -237,7 +256,7 @@
+ 	int doborder;
+ 	
+@@ -251,7 +273,7 @@
  	draw(b, r, pl_tick, nil, ZP);
  }
  void pl_clr(Image *b, Rectangle r){
@@ -169,3 +176,13 @@ diff 00542efd15c5ee37fa927fbe9ba85a2bb377d406 uncommitted
  	mkpanels();
  	unlockdisplay(display);
  	eresized(0);
+--- a/sys/src/cmd/mothra/snoop.c
++++ b/sys/src/cmd/mothra/snoop.c
+@@ -124,7 +124,6 @@
+ snooptype(int fd)
+ {
+ 	char buf[128];
+-	int i;
+ 	
+ 	if(filetype(fd, buf, sizeof(buf)) < 0)
+ 		return -1;

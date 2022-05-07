@@ -36,6 +36,8 @@ typedef enum Tmesg
 	Texit,		/* exit */
 	Tplumb,		/* send plumb message */
 	Ttclick,	/* triple click */
+	Tmenucmd,	/* list custom cmds in b2 menu */
+	Tmenucmdsend,	/* execute custom cmd from b2 menu */
 	TMAX,
 }Tmesg;
 /*
@@ -69,6 +71,7 @@ typedef enum Hmesg
 	Hack,		/* request acknowledgement */
 	Hexit,
 	Hplumb,		/* return plumb message to terminal - version 1 */
+	Hmenucmd,	/* modify custom cmds in b2 menu */
 	HMAX,
 }Hmesg;
 typedef struct Header{

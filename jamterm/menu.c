@@ -28,11 +28,6 @@ enum Menu2
 	Plumb,
 	Look,
 	Search,
-	Push,
-	Pop,
-	NMENU2,
-	Send = Search,
-	NMENU2C,
 };
 
 enum Menu3
@@ -52,8 +47,6 @@ char	*menu2str[] = {
 	"plumb",
 	"look",
 	nil,		/* storage for last pattern */
-	"push",
-	"pop",
 };
 
 int	ncmd;
@@ -75,10 +68,36 @@ Menu	menu3 =	{0, genmenu3};
 
 extern int kekfd[2];
 
+typedef struct Menucmd Menucmd;
+struct Menucmd{
+	char *cmd;
+	Menucmd *next;
+}*menucmds;
+
+char*
+findmenucmd(int n){
+	Menucmd *m;
+
+	for(m = menucmds; n > 0 && m != nil; n--)
+		m = m->next;
+	if(n == 0 && m != nil)
+		return m->cmd;
+	return nil;
+}
+
+void
+menucmdhit(char *s)
+{
+	if(s == nil)
+		return;
+	outstart(Tmenucmdsend);
+	outcopy(strlen(s), (uchar*)s);
+	outsend();
+}
+
 void
 menu2hit(void)
 {
-	char sbuf[256];
 	Text *t=(Text *)which->user1;
 	int w = which-t->l;
 	int m;
@@ -113,57 +132,18 @@ menu2hit(void)
 		break;
 
 	case Search:
-		if(menu2str[Search] == nil && t != &cmd)
+		if(t == &cmd || menu2str[Search] != nil){
+			outcmd();
+			if(t == &cmd)
+				outTsll(Tsend, 0 /*ignored*/, which->p0, which->p1);
+			else
+				outT0(Tsearch);
+			setlock();
 			break;
-		outcmd();
-		if(t==&cmd)
-			outTsll(Tsend, 0 /*ignored*/, which->p0, which->p1);
-		else
-			outT0(Tsearch);
-		setlock();
-		break;
-
-	case Push:
-		if(t == &cmd)
-			break;
-		memset(sbuf, 0, sizeof sbuf);
-		if(enter(nil, sbuf, sizeof sbuf, mousectl, keyboardctl, nil) < 0
-		|| strlen(sbuf) == 0)
-			break;
-		if(ncmd >= ncbuf){
-			if((cmds = realloc(cmds, (ncbuf+1) * sizeof *cmds)) == nil)
-				panic("realloc");
-			if((clabels = realloc(clabels, (ncbuf+1) * sizeof *clabels)) == nil)
-				panic("realloc");
-			ncbuf++;
 		}
-		if((cmds[ncmd] = strdup(sbuf)) == nil)
-			panic("strdup");
-		if((clabels[ncmd] = mallocz(25, 1)) == nil)
-			panic("mallocz");
-		if(snprint(clabels[ncmd], 24, "%s", sbuf) >= 24-3)
-			snprint(clabels[ncmd]+24-3, 3, "...");
-		m = NMENU2 + ncmd;
-		ncmd++;
-		goto load;
-
-	case Pop:
-		if(t == &cmd || ncmd <= 0)
-			break;
-		ncmd--;
-		free(cmds[ncmd]);
-		cmds[ncmd] = nil;
-		break;
-
-	load:
 	default:
-		m -= NMENU2;
-		if(m < 0 || m >= ncmd)
-			break;
-		memset(sbuf, 0, sizeof sbuf);
-		w = snprint(sbuf, sizeof sbuf, "%s\n", cmds[m]);
-		if(write(kekfd[1], sbuf, w + 1) != w + 1)
-			fprint(2, "jamterm: %r\n");
+		m -= Search+(menu2str[Search] != nil);
+		menucmdhit(findmenucmd(m));
 		break;
 	}
 }
@@ -322,6 +302,37 @@ setpat(char *s)
 	menu2str[Search] = pat;
 }
 
+void
+menucmd(char *s)
+{
+	Menucmd **mp, *m;
+
+	while(*s == ' ' || *s == '\t')
+		s++;
+	if(*s == 0){
+		outstart(Tmenucmd);
+		for(m = menucmds; m != nil; m = m->next){
+			outcopy(3, (uchar*)"\tM ");
+			outcopy(strlen(m->cmd), (uchar*)m->cmd);
+			outcopy(1, (uchar*)"\n");
+		}
+		outsend();
+		return;
+	}
+	for(mp = &menucmds; *mp != nil; mp = &(*mp)->next)
+		if(!strcmp(s, (*mp)->cmd)){
+			m = *mp;
+			*mp = m->next;
+			free(m->cmd);
+			free(m);
+			return;
+		}
+	*mp = m = malloc(sizeof(Menucmd));
+	if(m == nil) panic("malloc");
+	m->cmd = strdup(s);
+	m->next = nil;
+}
+
 #define	NBUF	64
 static uchar buf[NBUF*UTFmax]={' ', ' ', ' ', ' '};
 
@@ -336,23 +347,23 @@ paren(char *s)
 	*t = 0;
 	return (char *)buf;
 }
+
 char*
 genmenu2(int n)
 {
 	Text *t=(Text *)which->user1;
 	char *p;
-	
-	if(n >= NMENU2 + ncmd)
-		return 0;
-	if(n == Pop)
-		p = ncmd <= 0 ? "(pop)" : "pop";
-	else if(n == Search && menu2str[n] == nil)
-		p = "(search)";
-	else if(n >= NMENU2)
-		p = clabels[n-NMENU2];
-	else
+	if(n < Search || n == Search && (menu2str[Search] != nil))
 		p = menu2str[n];
-	if(!hostlock && !t->lock || n==Search || n==Look)
+	else{
+		n -= Search + (menu2str[Search] != nil);
+		p = findmenucmd(n);
+		if(p == nil)
+			return nil;
+	}
+	if(!hostlock && !t->lock
+	|| p == menu2str[Search]
+	|| p == menu2str[Look])
 		return p;
 	return paren(p);
 }
@@ -361,12 +372,12 @@ genmenu2c(int n)
 {
 	Text *t=(Text *)which->user1;
 	char *p;
-	if(n >= NMENU2C)
-		return 0;
-	else if(n == Send)
-		p="send";
-	else
+	if(n < Search)
 		p = menu2str[n];
+	else if(n == Search)
+		p = "send";
+	else if((p = findmenucmd(n - Search-1)) == nil)
+		return nil;
 	if(!hostlock && !t->lock)
 		return p;
 	return paren(p);

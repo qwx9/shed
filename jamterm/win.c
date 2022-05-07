@@ -9,7 +9,7 @@
 #include "samterm.h"
 
 enum{
-	SnapΔ = 32 * FLMARGIN,
+	SnapΔ = 24 * FLMARGIN,
 };
 
 int

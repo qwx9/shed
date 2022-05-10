@@ -142,6 +142,8 @@ menu2hit(void)
 			break;
 		}
 	default:
+		if(t == &cmd)
+			break;
 		m -= Search+(menu2str[Search] != nil);
 		menucmdhit(findmenucmd(m));
 		break;
@@ -376,7 +378,7 @@ genmenu2c(int n)
 		p = menu2str[n];
 	else if(n == Search)
 		p = "send";
-	else if((p = findmenucmd(n - Search-1)) == nil)
+	else
 		return nil;
 	if(!hostlock && !t->lock)
 		return p;

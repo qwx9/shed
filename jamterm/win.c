@@ -123,7 +123,7 @@ stealrect(Point p)
 			|| !ptinrect(p, fl->entire))
 				continue;
 			c = fl->entire;
-			if(Dx(c) * Dy(c) < Dx(r) * Dx(r))
+			if(Dx(c) * Dy(c) < Dx(r) * Dy(r))
 				r = c;
 		}
 	}

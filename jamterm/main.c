@@ -221,7 +221,7 @@ current(Flayer *nw, int warp, int up)
 }
 
 Flayer *
-cycle(void)
+cycle(int fw)
 {
 	int i;
 	Flayer *l;
@@ -231,8 +231,11 @@ cycle(void)
 			;
 		return &cmd.l[i];
 	}
-	l = work != nil && work->lnext != nil ? work->lnext : flru.lnext;
-	for(; l==&flru; l=l->lnext)
+	if(fw)
+		l = work != nil && work->lnext != nil ? work->lnext : flru.lnext;
+	else
+		l = work != nil && work->lprev != nil ? work->lprev : flru.lprev;
+	for(; l==&flru; l=fw ? l->lnext : l->lprev)
 		;
 	return l;
 }
@@ -256,7 +259,7 @@ closeup(Flayer *l)
 		text[m] = 0;
 		if(l == which){
 			which = nil;
-			current(cycle(), 1, 0);
+			current(cycle(1), 1, 0);
 		}
 	}else if(l == &t->l[t->front]){
 		for(m=0; m<NL; m++)	/* find one; any one will do */
@@ -540,6 +543,7 @@ nontypingkey(int c)
 	case Kenq:
 	case Kstx:
 	case Kbel:
+	case Ksyn:
 		return 1;
 	}
 	return 0;
@@ -715,7 +719,7 @@ type(Flayer *l, int res)	/* what a bloody mess this is */
 		a = t->rasp.nrunes;
 		flsetselect(l, a, a);
 		center(l, a);
-	}else if(c == Kbel){
+	}else if(c == Ksyn || c == Kbel){
 		int up = 1;
 		t = &cmd;
 		if(work != nil){
@@ -729,7 +733,7 @@ type(Flayer *l, int res)	/* what a bloody mess this is */
 		if(t == &cmd || t->nwin == 1 && nname > 1){
 			if(flru.lnext == &flru)
 				return;
-			l = cycle();
+			l = cycle(c == Kbel);
 			up = 0;
 		}else{
 	 		for(int i=t->front; (i = (i+1)%NL) != t->front; )

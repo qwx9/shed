@@ -10,6 +10,7 @@ enum{
 	Down,
 
 	Kbel=0x7,
+	Ksyn = 0x16,
 };
 
 typedef struct Text	Text;

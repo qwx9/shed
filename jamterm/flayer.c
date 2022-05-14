@@ -129,7 +129,10 @@ flborder(Flayer *l, int wide)
 {
 	if(flprepare(l)){
 		border(l->f.b, l->entire, FLMARGIN, l->f.cols[BACK], ZP);
-		border(l->f.b, l->entire, wide? FLMARGIN : 1, l->f.cols[BORD], ZP);
+		if(wide)
+			border(l->f.b, l->entire, FLMARGIN, cmdcols[BORD], ZP);
+		else
+			border(l->f.b, l->entire, 1, l->f.cols[BORD], ZP);
 		if(l->visible==Some)
 			flrefresh(l, l->entire, 0);
 	}

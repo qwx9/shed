@@ -1,6 +1,6 @@
-diff 00542efd15c5ee37fa927fbe9ba85a2bb377d406 uncommitted
---- a/sys/src/cmd/page.c
-+++ b/sys/src/cmd/page.c
+diff 0aa00960661531ff5a635d9c418901323299e4b4 uncommitted
+--- a//sys/src/cmd/page.c
++++ b//sys/src/cmd/page.c
 @@ -33,6 +33,7 @@
  int imode;
  int newwin;
@@ -203,7 +203,7 @@ diff 00542efd15c5ee37fa927fbe9ba85a2bb377d406 uncommitted
  			divpt(r.max, 2)), screen->r.min));
 -		draw(screen, r, paper, nil, ZP);
 -		string(screen, r.min, display->black, ZP, font, p->name);
-+		draw(screen, r, cols[Cpaper], nil, ZP);
++		draw(screen, r, cols[Cground], nil, ZP);
 +		string(screen, r.min, cols[Ctext], ZP, font, p->name);
  	}
  	drawframe(r);
@@ -282,7 +282,7 @@ diff 00542efd15c5ee37fa927fbe9ba85a2bb377d406 uncommitted
 -	ground = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x777777FF);
 +	Theme th[nelem(cols)] = {
 +		[Cground] { "back",	0x777777FF },
-+		[Cpaper] { "ltitle",	DWhite },
++		[Cpaper] { "paper",	DWhite },
 +		[Cframe] { "border",	DBlack },
 +		[Ctext]	{ "text",	DBlack },
 +	};

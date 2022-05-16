@@ -199,9 +199,9 @@ current(Flayer *nw, int warp, int up)
 		flborder(which, 0);
 		if(warp && ptinrect(mousectl->xy, insetrect(which->entire, 4)))
 			which->warpto = subpt(mousectl->xy, screen->r.min);
+		flushtyping(1);
 	}
 	if(nw){
-		flushtyping(1);
 		flupfront(nw);
 		flborder(nw, 1);
 		//buttons(Up);

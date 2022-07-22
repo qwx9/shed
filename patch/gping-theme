@@ -1,0 +1,192 @@
+diff 3cc07dddfbc2c5cb57fcd1849df55fca57f119db uncommitted
+--- a/sys/src/cmd/ip/gping.c
++++ b/sys/src/cmd/ip/gping.c
+@@ -107,6 +107,25 @@
+ };
+ 
+ Image		*cols[Ncolor][3];
++
++enum{
++	Cback,
++	Cbord,
++	Ctext,
++	Cmix1,
++	Cmix2,
++	Nscolor = Cmix2,
++	Ccol1,
++	Ccol2,
++	Ccol3,
++	Ccol4,
++	Ccol5,
++	Ccol6,
++	Ntcolor,
++};
++
++ Image	*cols[Ncolor][3];
++Image	*tcols[Nscolor];
+ Graph		*graph;
+ Machine		mach[NMACH];
+ int		pids[NPROC];
+@@ -173,30 +192,22 @@
+ }
+ 
+ void
+-mkcol(int i, int c0, int c1, int c2)
++mkcol(int i, int mix, int mix2, int c)
+ {
+-	cols[i][0] = allocimagemix(display, c0, DWhite);
+-	cols[i][1] = allocimage(display, Rect(0,0,1,1), CMAP8, 1, c1);
+-	cols[i][2] = allocimage(display, Rect(0,0,1,1), CMAP8, 1, c2);
++	cols[i][0] = allocimagemix(display, c, mix);
++	cols[i][1] = allocimagemix(display, c, mix2);
++	cols[i][2] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, c);
+ }
+ 
+ void
+-colinit(void)
++colinit(Theme th[Ntcolor])
+ {
+-	/* Peach */
+-	mkcol(0, 0xFFAAAAFF, 0xFFAAAAFF, 0xBB5D5DFF);
+-	/* Aqua */
+-	mkcol(1, DPalebluegreen, DPalegreygreen, DPurpleblue);
+-	/* Yellow */
+-	mkcol(2, DPaleyellow, DDarkyellow, DYellowgreen);
+-	/* Green */
+-	mkcol(3, DPalegreen, DMedgreen, DDarkgreen);
+-	/* Blue */
+-	mkcol(4, 0x00AAFFFF, 0x00AAFFFF, 0x0088CCFF);
+-	/* Grey */
+-	cols[5][0] = allocimage(display, Rect(0,0,1,1), CMAP8, 1, 0xEEEEEEFF);
+-	cols[5][1] = allocimage(display, Rect(0,0,1,1), CMAP8, 1, 0xCCCCCCFF);
+-	cols[5][2] = allocimage(display, Rect(0,0,1,1), CMAP8, 1, 0x888888FF);
++	mkcol(0, th[Cmix1].c, th[Cmix2].c, th[Ccol1].c);
++	mkcol(1, th[Cmix1].c, th[Cmix2].c, th[Ccol2].c);
++	mkcol(2, th[Cmix1].c, th[Cmix2].c, th[Ccol3].c);
++	mkcol(3, th[Cmix1].c, th[Cmix2].c, th[Ccol4].c);
++	mkcol(4, th[Cmix1].c, th[Cmix2].c, th[Ccol5].c);
++	mkcol(5, th[Cmix1].c, th[Cmix2].c, th[Ccol6].c);
+ }
+ 
+ void
+@@ -218,7 +229,7 @@
+ 		w = runestringwidth(font, r);
+ 		if(w > maxw)
+ 			maxw = w;
+-		runestring(screen, p, display->black, ZP, font, r);
++		runestring(screen, p, tcols[Ctext], ZP, font, r);
+ 		p.y += font->height-Ysqueeze;
+ 	}
+ }
+@@ -231,10 +242,10 @@
+ 
+ 	x = p.x + Labspace;
+ 	y = p.y + (dy*(vmax-v))/vmax;
+-	draw(screen, Rect(p.x, y-1, p.x+Labspace, y+1), display->black, nil, ZP);
++	draw(screen, Rect(p.x, y-1, p.x+Labspace, y+1), tcols[Cbord], nil, ZP);
+ 	if(dy > 5*font->height)
+ 		string(screen, Pt(x, y-font->height/2),
+-			display->black, ZP, font, label);
++			tcols[Ctext], ZP, font, label);
+ }
+ 
+ void
+@@ -337,7 +348,7 @@
+ 	/* draw message */
+ 	if(strlen(msg) > g->overtmplen)
+ 		msg[g->overtmplen] = 0;
+-	string(screen, g->overtmp->r.min, display->black, ZP, font, msg);
++	string(screen, g->overtmp->r.min, tcols[Ctext], ZP, font, msg);
+ }
+ 
+ void
+@@ -730,7 +741,7 @@
+ 	long v, vmax, mark;
+ 	char buf[128];
+ 
+-	draw(screen, screen->r, display->white, nil, ZP);
++	draw(screen, screen->r, tcols[Cback], nil, ZP);
+ 
+ 	/* label left edge */
+ 	x = screen->r.min.x;
+@@ -740,7 +751,7 @@
+ 	startx = x+dx+1;
+ 	starty = y;
+ 	for(i=0; i<ngraph; i++,y+=dy){
+-		draw(screen, Rect(x, y-1, screen->r.max.x, y), display->black, nil, ZP);
++		draw(screen, Rect(x, y-1, screen->r.max.x, y), tcols[Cbord], nil, ZP);
+ 		draw(screen, Rect(x, y, x+dx, screen->r.max.y), cols[graph[i].colindex][0], nil, paritypt(x));
+ 		label(Pt(x, y), dy, graph[i].label);
+ 		draw(screen, Rect(x+dx, y, x+dx+1, screen->r.max.y), cols[graph[i].colindex][2], nil, ZP);
+@@ -752,7 +763,7 @@
+ 	x = screen->r.max.x - dx;
+ 	y = screen->r.min.y + Labspace+font->height+Labspace;
+ 	for(i=0; i<ngraph; i++,y+=dy){
+-		draw(screen, Rect(x, y-1, screen->r.max.x, y), display->black, nil, ZP);
++		draw(screen, Rect(x, y-1, screen->r.max.x, y), tcols[Cbord], nil, ZP);
+ 		draw(screen, Rect(x, y, x+dx, screen->r.max.y), cols[graph[i].colindex][0], nil, paritypt(x));
+ 		hashmarks(Pt(x, y), dy, i);
+ 		draw(screen, Rect(x+dx, y, x+dx+1, screen->r.max.y), cols[graph[i].colindex][2], nil, ZP);
+@@ -761,7 +772,7 @@
+ 	/* label top edge */
+ 	dx = (screen->r.max.x - dx - startx)/nmach;
+ 	for(x=startx, i=0; i<nmach; i++,x+=dx){
+-		draw(screen, Rect(x-1, starty-1, x, screen->r.max.y), display->black, nil, ZP);
++		draw(screen, Rect(x-1, starty-1, x, screen->r.max.y), tcols[Cbord], nil, ZP);
+ 		j = dx/stringwidth(font, "0");
+ 		n = mach[i].nproc;
+ 		if(n>1 && j>=1+3+(n>10)+(n>100)){	/* first char of name + (n) */
+@@ -771,13 +782,13 @@
+ 			snprint(buf, sizeof buf, "%.*s(%d)", j, mach[i].name, n);
+ 		}else
+ 			snprint(buf, sizeof buf, "%.*s", j, mach[i].name);
+-		string(screen, Pt(x+Labspace, screen->r.min.y + Labspace), display->black, ZP,
++		string(screen, Pt(x+Labspace, screen->r.min.y + Labspace), tcols[Ctext], ZP,
+ 			font, buf);
+ 	}
+ 	/* draw last vertical line */
+ 	draw(screen,
+ 		Rect(screen->r.max.x-hashdx-1, starty-1, screen->r.max.x-hashdx, screen->r.max.y),
+-		display->black, nil, ZP);
++		tcols[Cbord], nil, ZP);
+ 
+ 	/* create graphs */
+ 	for(i=0; i<nmach; i++){
+@@ -985,8 +996,10 @@
+ 	if(nmach == 0)
+ 		usage();
+ 
+-	if(ngraph == 0)
++	if(ngraph == 0){
+ 		addgraph(Mrtt);
++		addgraph(Mlost);
++	}
+ 
+ 	for(i=0; i<nmach; i++)
+ 		for(j=0; j<ngraph; j++)
+@@ -997,7 +1010,24 @@
+ 		exits("initdraw");
+ 	}
+ 	display->locking = 1;	/* tell library we're using the display lock */
+-	colinit();
++
++	Theme th[Ntcolor] = {
++		[Cback] { "back",	DWhite },
++		[Cbord] { "border",	DBlack },
++		[Ctext] { "text",	DBlack },
++		[Cmix1] { "rioback",	DWhite },
++		[Cmix2] { "palehold",	DWhite },
++		[Ccol1] { "htext",	0xFFAAAAFF },
++		[Ccol2] { "high",	DPurpleblue },
++		[Ccol3] { "hold",	DYellowgreen },
++		[Ccol4] { "size",	DDarkgreen },
++		[Ccol5] { "title",	0x0088CCFF },
++		[Ccol6] { "paletext",	0x888888FF },
++	};
++	readtheme(th, nelem(th), nil);
++	for(i=0; i<nelem(tcols); i++)
++ 		tcols[i] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, th[i].c);
++	colinit(th);
+ 	einit(Emouse);
+ 	startproc(mouseproc, 0);
+ 
